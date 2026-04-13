@@ -31,9 +31,15 @@
 ---
 
 ## 📫 Contact Me
-- Email: your-email@example.com
-- LinkedIn: linkedin.com/in/your-profile
+- Email:misswang122727@gmail.com
 - Location: Beijing, China
+
+---
+
+## 📊 GitHub Stats
+![GitHub Stats](https://github-readme-stats.vercel.app/api?username=misswanng122727-gif&show_icons=true&theme=radical)
+
+![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=misswanng122727-gif.misswanng122727-gif)
 
 ---
 
