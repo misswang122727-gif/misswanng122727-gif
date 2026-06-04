@@ -1,0 +1,674 @@
+app:
+  description: 机器人语音指令流程判断工作流 - 识别语音指令意图并路由到对应执行动作
+  icon: 🤖
+  icon_background: '#E8F4FD'
+  mode: workflow
+  name: 机器人语音指令流程判断
+
+kind: app
+version: 0.1.3
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+        - .JPG
+        - .JPEG
+        - .PNG
+        - .WEBP
+      allowed_file_types:
+        - image
+      allowed_file_upload_methods:
+        - local_file
+        - remote_url
+      enabled: false
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+
+  graph:
+    edges:
+      # 开始 → 意图识别
+      - data:
+          isInIteration: false
+          sourceType: start
+          targetType: llm
+        id: start-to-intent
+        source: start
+        sourceHandle: source
+        target: intent_recognition
+        targetHandle: target
+        type: custom
+
+      # 意图识别 → 条件判断
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: if-else
+        id: intent-to-condition
+        source: intent_recognition
+        sourceHandle: source
+        target: condition_router
+        targetHandle: target
+        type: custom
+
+      # 条件判断 → 移动指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-move
+        source: condition_router
+        sourceHandle: move
+        target: handle_move
+        targetHandle: target
+        type: custom
+
+      # 条件判断 → 停止指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-stop
+        source: condition_router
+        sourceHandle: stop
+        target: handle_stop
+        targetHandle: target
+        type: custom
+
+      # 条件判断 → 抓取指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-grab
+        source: condition_router
+        sourceHandle: grab
+        target: handle_grab
+        targetHandle: target
+        type: custom
+
+      # 条件判断 → 查询状态处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-query
+        source: condition_router
+        sourceHandle: query
+        target: handle_query
+        targetHandle: target
+        type: custom
+
+      # 条件判断 → 未知指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-unknown
+        source: condition_router
+        sourceHandle: unknown
+        target: handle_unknown
+        targetHandle: target
+        type: custom
+
+      # 各处理节点 → 结束
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: move-to-end
+        source: handle_move
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: stop-to-end
+        source: handle_stop
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: grab-to-end
+        source: handle_grab
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: query-to-end
+        source: handle_query
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: unknown-to-end
+        source: handle_unknown
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+    nodes:
+      # ============ 开始节点 ============
+      - data:
+          desc: 接收用户语音指令文本输入
+          title: 开始
+          type: start
+          variables:
+            - label: 语音指令文本
+              max_length: 500
+              options: []
+              required: true
+              type: text-input
+              variable: voice_command
+            - label: 机器人ID
+              max_length: 50
+              options: []
+              required: false
+              type: text-input
+              variable: robot_id
+        height: 116
+        id: start
+        position:
+          x: 30
+          y: 282
+        positionAbsolute:
+          x: 30
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 意图识别节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 使用LLM识别语音指令的意图类型
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-prompt
+              role: system
+              text: |
+                你是一个机器人语音指令意图识别专家。
+                请分析用户的语音指令，识别其意图类型，并以JSON格式返回结果。
+
+                意图类型说明：
+                - MOVE: 移动类指令（前进、后退、左转、右转、移动到某位置等）
+                - STOP: 停止类指令（停止、暂停、刹车、急停等）
+                - GRAB: 抓取类指令（抓取、拿起、放下、夹取等）
+                - QUERY: 查询类指令（查询状态、报告位置、显示信息等）
+                - UNKNOWN: 无法识别或不在支持范围内的指令
+
+                返回格式（严格JSON，不要添加任何其他文字）：
+                {
+                  "intent": "MOVE|STOP|GRAB|QUERY|UNKNOWN",
+                  "confidence": 0.0-1.0,
+                  "key_params": {
+                    "direction": "方向（如有）",
+                    "distance": "距离（如有）",
+                    "speed": "速度（如有）",
+                    "target": "目标对象（如有）",
+                    "action": "具体动作描述"
+                  },
+                  "original_command": "原始指令"
+                }
+            - id: user-prompt
+              role: user
+              text: |
+                请识别以下语音指令的意图：
+                机器人ID: {{#start.robot_id#}}
+                语音指令: {{#start.voice_command#}}
+          selected: false
+          title: 意图识别
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: intent_recognition
+        position:
+          x: 350
+          y: 282
+        positionAbsolute:
+          x: 350
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 条件路由节点 ============
+      - data:
+          cases:
+            - case_id: move
+              conditions:
+                - comparison_operator: contains
+                  id: move-condition
+                  value: MOVE
+                  variable_selector:
+                    - intent_recognition
+                    - text
+              id: move
+              logical_operator: and
+
+            - case_id: stop
+              conditions:
+                - comparison_operator: contains
+                  id: stop-condition
+                  value: STOP
+                  variable_selector:
+                    - intent_recognition
+                    - text
+              id: stop
+              logical_operator: and
+
+            - case_id: grab
+              conditions:
+                - comparison_operator: contains
+                  id: grab-condition
+                  value: GRAB
+                  variable_selector:
+                    - intent_recognition
+                    - text
+              id: grab
+              logical_operator: and
+
+            - case_id: query
+              conditions:
+                - comparison_operator: contains
+                  id: query-condition
+                  value: QUERY
+                  variable_selector:
+                    - intent_recognition
+                    - text
+              id: query
+              logical_operator: and
+
+          desc: 根据意图识别结果路由到对应处理分支
+          title: 指令路由
+          type: if-else
+        height: 230
+        id: condition_router
+        position:
+          x: 670
+          y: 200
+        positionAbsolute:
+          x: 670
+          y: 200
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 移动指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理移动类语音指令，生成执行参数
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-move
+              role: system
+              text: |
+                你是机器人移动指令执行器。
+                根据意图识别结果，生成标准化的移动指令执行参数。
+                返回JSON格式的执行指令。
+            - id: user-move
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                意图识别结果: {{#intent_recognition.text#}}
+
+                请生成移动执行参数（JSON格式）：
+                {
+                  "command_type": "MOVE",
+                  "action": "forward|backward|turn_left|turn_right|navigate_to",
+                  "parameters": {
+                    "direction": "方向",
+                    "distance_cm": 距离厘米数,
+                    "speed_level": "slow|normal|fast",
+                    "angle_degrees": 转向角度
+                  },
+                  "safety_check": "是否通过安全检查（true/false）",
+                  "execution_note": "执行备注"
+                }
+          selected: false
+          title: 处理移动指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_move
+        position:
+          x: 990
+          y: 50
+        positionAbsolute:
+          x: 990
+          y: 50
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 停止指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理停止类语音指令，立即触发停止
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-stop
+              role: system
+              text: |
+                你是机器人停止指令执行器。
+                停止指令是最高优先级指令，需要立即响应。
+            - id: user-stop
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                意图识别结果: {{#intent_recognition.text#}}
+
+                请生成停止执行参数（JSON格式）：
+                {
+                  "command_type": "STOP",
+                  "stop_mode": "immediate|gradual|emergency",
+                  "priority": "HIGH",
+                  "parameters": {
+                    "brake_force": "full|partial",
+                    "hold_position": true
+                  },
+                  "execution_note": "执行备注"
+                }
+          selected: false
+          title: 处理停止指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_stop
+        position:
+          x: 990
+          y: 200
+        positionAbsolute:
+          x: 990
+          y: 200
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 抓取指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理抓取/操作类语音指令
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-grab
+              role: system
+              text: |
+                你是机器人抓取指令执行器。
+                根据指令生成机械臂控制参数。
+            - id: user-grab
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                意图识别结果: {{#intent_recognition.text#}}
+
+                请生成抓取执行参数（JSON格式）：
+                {
+                  "command_type": "GRAB",
+                  "action": "grab|release|move_to|hold",
+                  "parameters": {
+                    "target_object": "目标物体",
+                    "grip_strength": "light|normal|firm",
+                    "arm_position": "目标位置描述",
+                    "approach_speed": "slow|normal"
+                  },
+                  "collision_avoidance": true,
+                  "execution_note": "执行备注"
+                }
+          selected: false
+          title: 处理抓取指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_grab
+        position:
+          x: 990
+          y: 350
+        positionAbsolute:
+          x: 990
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 查询状态处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理状态查询类语音指令
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.2
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-query
+              role: system
+              text: |
+                你是机器人状态查询处理器。
+                根据查询指令返回需要查询的信息类型。
+            - id: user-query
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                意图识别结果: {{#intent_recognition.text#}}
+
+                请生成查询请求参数（JSON格式）：
+                {
+                  "command_type": "QUERY",
+                  "query_items": ["battery", "position", "speed", "temperature", "task_status"],
+                  "response_format": "voice|display|both",
+                  "priority": "normal",
+                  "execution_note": "执行备注"
+                }
+          selected: false
+          title: 处理查询指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_query
+        position:
+          x: 990
+          y: 500
+        positionAbsolute:
+          x: 990
+          y: 500
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 未知指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理无法识别的语音指令，给出友好提示
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.5
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-unknown
+              role: system
+              text: |
+                你是机器人指令处理助手。
+                当指令无法识别时，给出友好的错误提示和建议。
+                回复要简洁，适合语音播报。
+            - id: user-unknown
+              role: user
+              text: |
+                用户的语音指令无法识别: "{{#start.voice_command#}}"
+                意图识别结果: {{#intent_recognition.text#}}
+
+                请生成友好的错误响应（JSON格式）：
+                {
+                  "command_type": "UNKNOWN",
+                  "error_message": "无法识别的指令，请重新说明",
+                  "suggestions": ["前进", "后退", "停止", "抓取物体", "查询状态"],
+                  "voice_response": "适合语音播报的友好提示文本",
+                  "execution_note": "需要人工干预"
+                }
+          selected: false
+          title: 处理未知指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_unknown
+        position:
+          x: 990
+          y: 650
+        positionAbsolute:
+          x: 990
+          y: 650
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 结束节点 ============
+      - data:
+          desc: 输出最终执行结果
+          outputs:
+            - value_selector:
+                - intent_recognition
+                - text
+              variable: intent_result
+            - value_selector:
+                - handle_move
+                - text
+              variable: move_result
+            - value_selector:
+                - handle_stop
+                - text
+              variable: stop_result
+            - value_selector:
+                - handle_grab
+                - text
+              variable: grab_result
+            - value_selector:
+                - handle_query
+                - text
+              variable: query_result
+            - value_selector:
+                - handle_unknown
+                - text
+              variable: unknown_result
+          title: 结束
+          type: end
+        height: 116
+        id: end
+        position:
+          x: 1310
+          y: 282
+        positionAbsolute:
+          x: 1310
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
