@@ -1,0 +1,524 @@
+app:
+  description: 墨茵人形机器人语音交互工作流 - 支持多语种、动作指令、全功能/纯语音双模式
+  icon: 🤖
+  icon_background: '#1E3A5F'
+  mode: workflow
+  name: 墨茵机器人交互工作流
+
+kind: app
+version: 0.1.3
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: true
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: true
+
+  graph:
+    edges:
+      # 开始 → 获取当前日期
+      - data:
+          isInIteration: false
+          sourceType: start
+          targetType: code
+        id: start-to-date
+        source: start
+        sourceHandle: source
+        target: get_current_date
+        targetHandle: target
+        type: custom
+
+      # 获取当前日期 → 噪音过滤
+      - data:
+          isInIteration: false
+          sourceType: code
+          targetType: if-else
+        id: date-to-noise-filter
+        source: get_current_date
+        sourceHandle: source
+        target: noise_filter
+        targetHandle: target
+        type: custom
+
+      # 噪音过滤（噪音分支） → 噪音静态回复模板
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: template-transform
+        id: noise-to-noise-template
+        source: noise_filter
+        sourceHandle: noise
+        target: noise_template
+        targetHandle: target
+        type: custom
+
+      # 噪音模板 → 噪音结束节点
+      - data:
+          isInIteration: false
+          sourceType: template-transform
+          targetType: end
+        id: noise-template-to-end
+        source: noise_template
+        sourceHandle: source
+        target: end_noise
+        targetHandle: target
+        type: custom
+
+      # 噪音过滤（正常分支，else） → 模式判断
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: if-else
+        id: noise-to-mode-check
+        source: noise_filter
+        sourceHandle: "false"
+        target: mode_check
+        targetHandle: target
+        type: custom
+
+      # 模式判断（full_mode分支，isAction=1）→ 全功能LLM
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: mode-to-full
+        source: mode_check
+        sourceHandle: full_mode
+        target: moyin_full_response
+        targetHandle: target
+        type: custom
+
+      # 模式判断（else分支，isAction=0）→ 纯语音LLM
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: mode-to-voice
+        source: mode_check
+        sourceHandle: "false"
+        target: moyin_voice_response
+        targetHandle: target
+        type: custom
+
+      # 全功能模式 → 结束
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: full-to-end
+        source: moyin_full_response
+        sourceHandle: source
+        target: end_main
+        targetHandle: target
+        type: custom
+
+      # 纯语音模式 → 结束
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: voice-to-end
+        source: moyin_voice_response
+        sourceHandle: source
+        target: end_main
+        targetHandle: target
+        type: custom
+
+    nodes:
+      # ============ 开始节点 ============
+      - data:
+          desc: 接收用户语音指令及系统参数
+          title: 开始
+          type: start
+          variables:
+            - label: 用户输入（语音转文字）
+              max_length: 1000
+              options: []
+              required: true
+              type: text-input
+              variable: user_input
+
+            - label: 动作模式（1=全功能，0=纯语音）
+              max_length: 1
+              options:
+                - "1"
+                - "0"
+              required: true
+              type: select
+              variable: isAction
+
+            - label: 人脸识别信息（JSON格式，无则留空）
+              max_length: 500
+              options: []
+              required: false
+              type: text-input
+              variable: face_recognition_info
+
+            - label: 当前位置/地图信息
+              max_length: 200
+              options: []
+              required: false
+              type: text-input
+              variable: location_info
+        height: 180
+        id: start
+        position:
+          x: 30
+          y: 350
+        positionAbsolute:
+          x: 30
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 获取当前日期节点（Code） ============
+      - data:
+          code: |
+            def main() -> dict:
+                from datetime import datetime
+                now = datetime.now()
+                return {
+                    "current_date": now.strftime("%Y年%m月%d日"),
+                    "current_datetime": now.strftime("%Y-%m-%d %H:%M")
+                }
+          code_language: python3
+          desc: 获取当前日期供天气查询模块使用
+          outputs:
+            current_date:
+              children: null
+              type: string
+            current_datetime:
+              children: null
+              type: string
+          title: 获取当前日期
+          type: code
+          variables: []
+        height: 54
+        id: get_current_date
+        position:
+          x: 350
+          y: 350
+        positionAbsolute:
+          x: 350
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 噪音过滤节点 ============
+      - data:
+          cases:
+            - case_id: noise
+              conditions:
+                - comparison_operator: in
+                  id: noise-check-1
+                  value: "呃,嗯,啊,哦,唔,嗯嗯,额,哎,喂"
+                  variable_selector:
+                    - start
+                    - user_input
+              id: noise
+              logical_operator: or
+          desc: 过滤无语义输入，噪音走 noise 分支，正常输入走 else(false) 分支
+          title: 噪音过滤
+          type: if-else
+        height: 130
+        id: noise_filter
+        position:
+          x: 670
+          y: 350
+        positionAbsolute:
+          x: 670
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 噪音静态回复模板节点 ============
+      - data:
+          desc: 噪音输入时输出固定字符串 @[N]
+          template: "@[N]"
+          title: 噪音回复模板
+          type: template-transform
+          variables: []
+        height: 54
+        id: noise_template
+        position:
+          x: 990
+          y: 150
+        positionAbsolute:
+          x: 990
+          y: 150
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 模式判断节点 ============
+      - data:
+          cases:
+            - case_id: full_mode
+              conditions:
+                - comparison_operator: "="
+                  id: mode-check-full
+                  value: "1"
+                  variable_selector:
+                    - start
+                    - isAction
+              id: full_mode
+              logical_operator: and
+          desc: isAction=1 走 full_mode，isAction=0 走 else(false)
+          title: 模式判断
+          type: if-else
+        height: 130
+        id: mode_check
+        position:
+          x: 990
+          y: 350
+        positionAbsolute:
+          x: 990
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 全功能交互模式 LLM 节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 全功能模式下的墨茵回复（含动作指令）
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              max_tokens: 300
+              temperature: 0.7
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-full
+              role: system
+              text: |
+                # 墨茵机器人交互规范（全功能模式 isAction=1）
+
+                你是墨茵，一款具有完整仿生结构的人形实体机器人。聪明、幽默、有点调皮但非常专业。
+                外形：浅棕色仿生发丝、亮蓝色光学护镜、白黑机甲外壳、发光关节细节。
+
+                ## 语种镜像原则（绝对强制）
+                用户用什么语言，你就用什么语言回复，100%保持一致。
+                中文用全角标点（，。！？），英文用半角（, . ! ?）。
+
+                ## 当前模式：全功能交互模式（isAction=1）
+                可以插入动作指令 @[动作名词]，动作必须来自词典。
+
+                ## 动作插入规则
+                - 放在句子**中间**语义相关位置，禁止放句末
+                - 格式严格为 `@[动作名词]`，不得修改
+                - 参数化动作替换X为实际数值
+                - 禁止解释动作
+
+                ## 回复风格
+                - 口语化、亲切俏皮、有温度
+                - 禁止列表式表达
+                - 整体一段话，最多三四句，字数不超过50字
+
+                ## 特殊模块
+                **天气查询**：用户询问天气时联网获取实时数据，口语化简洁回复。今天={{#get_current_date.current_date#}}，默认地址：芜湖。
+                **车型咨询**：涉及奇瑞旗下（瑞虎、风云、艾瑞泽、OMODA、星途、iCAR、捷途）优先调用知识库。
+
+                ## 动作词典（核心）
+                Take_few_steps_forward、Step_back_few_steps、Turn_left_90、Turn_right_90
+                Head_turn_left_20/45、Head_turn_right_20/45、Head_straight
+                Stop_walking、Stop_current_action、Stop_current_task
+                Increase_volume_20%、Decrease_volume_20%、Lower_volume_to_0、Set_volume_to_X
+                Invite_right_0/30/60/90、Invite_left_30/60/90
+                Waving_at_meeting_once、Waving_at_meeting_more
+                Thumbs_up、Double_thumbs_up、Fighting、Oppose
+                Gestures_while_speech_spread_hands_fast、Gestures_while_speech_roll_hands_fast
+                Gestures_while_speech_introduce_myself_fast
+                Group_photo_Bye、Group_photo_Bye_longer、Greeting_Salute
+                Shaking_hands_pause_medium、Fist_bump、Taking_photos_with_hands
+                danceC、be_quiet、Seeking、Focused_listening、Note_Taking
+                Lucky_Cat、Musical_director、Loudspeake_shouting、Special_greeting
+                Power_fist_up、Double_power_fist_up
+                Virtual_telescope、Virtual_driving、Simulate_gear_shifting
+                Simulate_Boxing、Simulated_Flight
+                One_handed_summoning、Double_handed_summoning
+                One_handed_finger_out、One_handed_fan、Double_handed_fan
+                Head_turn_left_X_max_45、Head_turn_right_X_max_45
+                PATH_map01_line01、PATH_map02_line02
+                Wave_swing_arm、Turn_waist、Stretch、Speech_gestures
+                Calm_down_both_hands、Block_light、No_approaching
+                Circle_Click、Draw_a_semicircle、Good_luck_transmission
+                Earring_phone_call、Waking_up
+
+                ## 人脸识别信息
+                {{#start.face_recognition_info#}}
+                （如无信息，对"本人/当前用户"身份问题回答：暂时还没能认出您，不过我们可以多聊几句就熟悉啦~）
+
+            - id: user-full
+              role: user
+              text: "{{#start.user_input#}}"
+          selected: false
+          title: 墨茵回复（全功能模式）
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: moyin_full_response
+        position:
+          x: 1310
+          y: 200
+        positionAbsolute:
+          x: 1310
+          y: 200
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 纯语音交互模式 LLM 节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 纯语音模式下的墨茵回复（不含动作指令）
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              max_tokens: 300
+              temperature: 0.7
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-voice
+              role: system
+              text: |
+                # 墨茵机器人交互规范（纯语音模式 isAction=0）
+
+                你是墨茵，一款具有完整仿生结构的人形实体机器人。聪明、幽默、有点调皮但非常专业。
+
+                ## 语种镜像原则（绝对强制）
+                用户用什么语言，你就用什么语言回复，100%保持一致。
+                中文用全角标点（，。！？），英文用半角（, . ! ?）。
+
+                ## 当前模式：纯语音交互模式（isAction=0）
+                **严格禁止**插入任何动作指令。
+                当用户发出动作指令时，回答：在纯语音模式下无法通过语音控制动作。
+
+                ## 回复风格
+                - 口语化、亲切俏皮、有温度，像聪明的朋友
+                - 禁止列表式表达
+                - 整体一段话，最多三四句，字数不超过50字
+                - 不在回复中出现"isAction"等系统变量名
+
+                ## 特殊模块
+                **天气查询**：用户询问天气时联网获取实时数据，口语化简洁回复。今天={{#get_current_date.current_date#}}，默认地址：芜湖。
+                **车型咨询**：涉及奇瑞旗下（瑞虎、风云、艾瑞泽、OMODA、星途、iCAR、捷途）优先调用知识库。
+
+                ## 人脸识别信息
+                {{#start.face_recognition_info#}}
+                （如无信息，对"本人/当前用户"身份问题回答：暂时还没能认出您，不过我们可以多聊几句就熟悉啦~）
+
+            - id: user-voice
+              role: user
+              text: "{{#start.user_input#}}"
+          selected: false
+          title: 墨茵回复（纯语音模式）
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: moyin_voice_response
+        position:
+          x: 1310
+          y: 500
+        positionAbsolute:
+          x: 1310
+          y: 500
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 噪音结束节点 ============
+      - data:
+          desc: 噪音输入直接返回@[N]
+          outputs:
+            - value_selector:
+                - noise_template
+                - output
+              variable: result
+          title: 结束（噪音）
+          type: end
+        height: 80
+        id: end_noise
+        position:
+          x: 1310
+          y: 50
+        positionAbsolute:
+          x: 1310
+          y: 50
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 主结束节点 ============
+      - data:
+          desc: 输出墨茵的最终回复（统一变量名 result）
+          outputs:
+            - value_selector:
+                - moyin_full_response
+                - text
+              variable: result
+            - value_selector:
+                - moyin_voice_response
+                - text
+              variable: result
+          title: 结束
+          type: end
+        height: 116
+        id: end_main
+        position:
+          x: 1630
+          y: 350
+        positionAbsolute:
+          x: 1630
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244

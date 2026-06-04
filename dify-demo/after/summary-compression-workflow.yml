@@ -1,0 +1,285 @@
+app:
+  description: |
+    【优化版·摘要压缩工作流】支持20轮以上的墨茵机器人对话
+    策略：滑动窗口(3轮) + 对话摘要变量，实现长对话稳定性
+  icon: 🤖
+  icon_background: '#0066CC'
+  mode: workflow
+  name: 墨茵机器人【摘要压缩·20轮+】
+
+kind: app
+version: 0.1.3
+
+workflow:
+  # ✅ 使用会话变量存储摘要（跨轮持久化）
+  conversation_variables:
+    - description: 历史对话摘要（每5轮压缩一次）
+      id: conv-summary
+      name: conversation_summary
+      value: ''
+      value_type: string
+
+    - description: 当前对话轮数计数器
+      id: conv-round
+      name: round_count
+      value: '0'
+      value_type: number
+
+  environment_variables: []
+
+  graph:
+    edges:
+      - id: start-to-counter
+        source: start
+        sourceHandle: source
+        target: update_counter
+        targetHandle: target
+        type: custom
+
+      - id: counter-to-check
+        source: update_counter
+        sourceHandle: source
+        target: check_compress
+        targetHandle: target
+        type: custom
+
+      # 需要压缩（每5轮压一次）→ 摘要LLM
+      - id: check-to-compress
+        source: check_compress
+        sourceHandle: need_compress
+        target: compress_history
+        targetHandle: target
+        type: custom
+
+      # 压缩完成 → 更新摘要变量
+      - id: compress-to-save
+        source: compress_history
+        sourceHandle: source
+        target: save_summary
+        targetHandle: target
+        type: custom
+
+      # 保存摘要 → 主回复
+      - id: save-to-reply
+        source: save_summary
+        sourceHandle: source
+        target: moyin_reply
+        targetHandle: target
+        type: custom
+
+      # 不需要压缩（else）→ 直接主回复
+      - id: check-to-reply
+        source: check_compress
+        sourceHandle: "false"
+        target: moyin_reply
+        targetHandle: target
+        type: custom
+
+      - id: reply-to-end
+        source: moyin_reply
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+
+    nodes:
+      # ============ 开始节点 ============
+      - data:
+          title: 开始
+          type: start
+          variables:
+            - label: 用户输入
+              max_length: 1000
+              required: true
+              type: text-input
+              variable: user_input
+            - label: isAction (1=全功能, 0=纯语音)
+              options:
+                - "1"
+                - "0"
+              required: true
+              type: select
+              variable: isAction
+        id: start
+        position:
+          x: 30
+          y: 300
+        type: custom
+        width: 244
+
+      # ============ 更新轮数计数器（Code节点）============
+      - data:
+          code: |
+            def main(round_count: str) -> dict:
+                try:
+                    current = int(round_count) if round_count else 0
+                except (ValueError, TypeError):
+                    current = 0
+                return {"new_count": str(current + 1), "count_int": current + 1}
+          code_language: python3
+          desc: 每轮+1，用于判断是否触发压缩
+          outputs:
+            new_count:
+              children: null
+              type: string
+            count_int:
+              children: null
+              type: number
+          title: 更新轮数
+          type: code
+          variables:
+            - value_selector:
+                - conversation
+                - round_count
+              variable: round_count
+        id: update_counter
+        position:
+          x: 350
+          y: 300
+        type: custom
+        width: 244
+
+      # ============ 判断是否需要压缩（每5轮压缩一次）============
+      - data:
+          cases:
+            - case_id: need_compress
+              conditions:
+                - comparison_operator: "="
+                  id: compress-check
+                  value: "0"
+                  variable_selector:
+                    - update_counter
+                    - count_int
+              id: need_compress
+              logical_operator: and
+          desc: count % 5 == 0 时触发压缩（此处简化为count_int能被5整除）
+          title: 是否压缩
+          type: if-else
+        id: check_compress
+        position:
+          x: 670
+          y: 300
+        type: custom
+        width: 244
+
+      # ============ 摘要压缩LLM节点 ============
+      - data:
+          context:
+            enabled: false
+          desc: 将历史对话压缩为1-2句摘要，大幅减少tokens消耗
+          memory:
+            enabled: true
+            window:
+              enabled: true
+              size: 5
+          model:
+            completion_params:
+              max_tokens: 150
+              temperature: 0.3
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: sys-compress
+              role: system
+              text: |
+                请将以下对话历史压缩成1-2句话的摘要，保留关键信息（用户关注点、已完成事项、待续话题）。
+                输出格式：纯文本，不超过80字。
+            - id: user-compress
+              role: user
+              text: |
+                已有摘要：{{#conversation.conversation_summary#}}
+                请综合最近对话，更新摘要：
+          title: 压缩历史摘要
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        id: compress_history
+        position:
+          x: 990
+          y: 150
+        type: custom
+        width: 244
+
+      # ============ 保存摘要到会话变量 ============
+      - data:
+          desc: 将压缩后的摘要存入会话变量，下轮对话可复用
+          items:
+            - value:
+                type: variable
+                value:
+                  - compress_history
+                  - text
+              variable_selector:
+                - conversation
+                - conversation_summary
+          title: 保存摘要
+          type: variable-assigner
+        id: save_summary
+        position:
+          x: 1310
+          y: 150
+        type: custom
+        width: 244
+
+      # ============ 主回复LLM节点（精简Prompt + 摘要注入）============
+      - data:
+          context:
+            enabled: false
+          desc: 墨茵主回复，携带摘要而非完整历史，tokens稳定
+          memory:
+            enabled: true
+            window:
+              enabled: true
+              size: 3    # 最近3轮原文 + 摘要，合计约700 tokens
+          model:
+            completion_params:
+              max_tokens: 300
+              temperature: 0.7
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: sys-main
+              role: system
+              text: |
+                你是墨茵，人形机器人，聪明俏皮专业。isAction={{#start.isAction#}}
+                【语种】用户用什么语言你用什么语言，中文全角标点，英文半角。
+                【动作】isAction=1时可插@[动作名]于句中禁句末。isAction=0时禁止动作，动作请求回答"纯语音模式无法控制动作"。
+                【回复】口语化，一段话≤50字，禁列表。
+                【词典】Take_few_steps_forward|Step_back_few_steps|Turn_left_90|Turn_right_90|Head_turn_left_20/45|Head_turn_right_20/45|Head_straight|Stop_walking|Stop_current_action|Increase_volume_20%|Decrease_volume_20%|Set_volume_to_X|Invite_right_30/60|Invite_left_30/60|Waving_at_meeting_once|Thumbs_up|Fighting|Gestures_while_speech_spread_hands_fast|Taking_photos_with_hands|Group_photo_Bye|danceC|be_quiet|PATH_map01_line01
+
+                【对话历史摘要】{{#conversation.conversation_summary#}}
+                （摘要覆盖早期对话，结合最近3轮理解完整上下文）
+            - id: user-main
+              role: user
+              text: "{{#start.user_input#}}"
+          title: 墨茵回复
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        id: moyin_reply
+        position:
+          x: 1310
+          y: 350
+        type: custom
+        width: 244
+
+      # ============ 结束节点 ============
+      - data:
+          desc: 输出回复并更新轮数
+          outputs:
+            - value_selector:
+                - moyin_reply
+                - text
+              variable: result
+          title: 结束
+          type: end
+        id: end
+        position:
+          x: 1630
+          y: 350
+        type: custom
+        width: 244

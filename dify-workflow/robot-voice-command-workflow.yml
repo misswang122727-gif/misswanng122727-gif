@@ -1,0 +1,712 @@
+app:
+  description: 机器人语音指令流程判断工作流 - 识别语音指令意图并路由到对应执行动作
+  icon: 🤖
+  icon_background: '#E8F4FD'
+  mode: workflow
+  name: 机器人语音指令流程判断
+
+kind: app
+version: 0.1.3
+
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+
+  graph:
+    edges:
+      # 开始 → 意图识别LLM
+      - data:
+          isInIteration: false
+          sourceType: start
+          targetType: llm
+        id: start-to-intent
+        source: start
+        sourceHandle: source
+        target: intent_recognition
+        targetHandle: target
+        type: custom
+
+      # 意图识别 → JSON解析代码节点
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: code
+        id: intent-to-parser
+        source: intent_recognition
+        sourceHandle: source
+        target: intent_parser
+        targetHandle: target
+        type: custom
+
+      # JSON解析 → 条件路由
+      - data:
+          isInIteration: false
+          sourceType: code
+          targetType: if-else
+        id: parser-to-router
+        source: intent_parser
+        sourceHandle: source
+        target: condition_router
+        targetHandle: target
+        type: custom
+
+      # 条件路由 → 移动指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-move
+        source: condition_router
+        sourceHandle: move
+        target: handle_move
+        targetHandle: target
+        type: custom
+
+      # 条件路由 → 停止指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-stop
+        source: condition_router
+        sourceHandle: stop
+        target: handle_stop
+        targetHandle: target
+        type: custom
+
+      # 条件路由 → 抓取指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-grab
+        source: condition_router
+        sourceHandle: grab
+        target: handle_grab
+        targetHandle: target
+        type: custom
+
+      # 条件路由 → 查询状态处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-query
+        source: condition_router
+        sourceHandle: query
+        target: handle_query
+        targetHandle: target
+        type: custom
+
+      # 条件路由（else默认分支）→ 未知指令处理
+      - data:
+          isInIteration: false
+          sourceType: if-else
+          targetType: llm
+        id: condition-to-unknown
+        source: condition_router
+        sourceHandle: "false"
+        target: handle_unknown
+        targetHandle: target
+        type: custom
+
+      # 各处理节点 → 各自独立的结束节点（统一输出变量名 result）
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: move-to-end
+        source: handle_move
+        sourceHandle: source
+        target: end_move
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: stop-to-end
+        source: handle_stop
+        sourceHandle: source
+        target: end_stop
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: grab-to-end
+        source: handle_grab
+        sourceHandle: source
+        target: end_grab
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: query-to-end
+        source: handle_query
+        sourceHandle: source
+        target: end_query
+        targetHandle: target
+        type: custom
+
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: end
+        id: unknown-to-end
+        source: handle_unknown
+        sourceHandle: source
+        target: end_unknown
+        targetHandle: target
+        type: custom
+
+    nodes:
+      # ============ 开始节点 ============
+      - data:
+          desc: 接收用户语音指令文本输入
+          title: 开始
+          type: start
+          variables:
+            - label: 语音指令文本
+              max_length: 500
+              options: []
+              required: true
+              type: text-input
+              variable: voice_command
+            - label: 机器人ID
+              max_length: 50
+              options: []
+              required: false
+              type: text-input
+              variable: robot_id
+        height: 116
+        id: start
+        position:
+          x: 30
+          y: 350
+        positionAbsolute:
+          x: 30
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 意图识别LLM节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 使用LLM识别语音指令的意图类型，输出严格JSON
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-prompt
+              role: system
+              text: |
+                你是机器人语音指令意图识别专家。
+                严格按照以下JSON格式输出，不要添加任何其他文字或markdown代码块：
+                {"intent":"MOVE","confidence":0.95,"key_params":{"action":"具体动作"}}
+
+                intent 只能是以下之一：MOVE / STOP / GRAB / QUERY / UNKNOWN
+                - MOVE: 移动类（前进、后退、左转、右转、移动到某位置）
+                - STOP: 停止类（停止、暂停、刹车、急停）
+                - GRAB: 抓取类（抓取、拿起、放下、夹取）
+                - QUERY: 查询类（查询状态、报告位置、显示信息）
+                - UNKNOWN: 无法识别
+            - id: user-prompt
+              role: user
+              text: |
+                语音指令: {{#start.voice_command#}}
+          selected: false
+          title: 意图识别
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: intent_recognition
+        position:
+          x: 350
+          y: 350
+        positionAbsolute:
+          x: 350
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ JSON解析代码节点（避免字符串contains误判）============
+      - data:
+          code: |
+            import json
+
+            def main(llm_output: str) -> dict:
+                try:
+                    data = json.loads(llm_output.strip())
+                    intent = data.get("intent", "UNKNOWN").upper()
+                    allowed = {"MOVE", "STOP", "GRAB", "QUERY", "UNKNOWN"}
+                    if intent not in allowed:
+                        intent = "UNKNOWN"
+                    return {"intent": intent, "raw": llm_output}
+                except Exception:
+                    return {"intent": "UNKNOWN", "raw": llm_output}
+          code_language: python3
+          desc: 安全解析LLM输出的JSON，提取intent字段，避免字符串匹配误判
+          outputs:
+            intent:
+              children: null
+              type: string
+            raw:
+              children: null
+              type: string
+          title: 解析意图JSON
+          type: code
+          variables:
+            - value_selector:
+                - intent_recognition
+                - text
+              variable: llm_output
+        height: 54
+        id: intent_parser
+        position:
+          x: 670
+          y: 350
+        positionAbsolute:
+          x: 670
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 条件路由节点（精确匹配，不误判）============
+      - data:
+          cases:
+            - case_id: move
+              conditions:
+                - comparison_operator: "="
+                  id: move-condition
+                  value: MOVE
+                  variable_selector:
+                    - intent_parser
+                    - intent
+              id: move
+              logical_operator: and
+
+            - case_id: stop
+              conditions:
+                - comparison_operator: "="
+                  id: stop-condition
+                  value: STOP
+                  variable_selector:
+                    - intent_parser
+                    - intent
+              id: stop
+              logical_operator: and
+
+            - case_id: grab
+              conditions:
+                - comparison_operator: "="
+                  id: grab-condition
+                  value: GRAB
+                  variable_selector:
+                    - intent_parser
+                    - intent
+              id: grab
+              logical_operator: and
+
+            - case_id: query
+              conditions:
+                - comparison_operator: "="
+                  id: query-condition
+                  value: QUERY
+                  variable_selector:
+                    - intent_parser
+                    - intent
+              id: query
+              logical_operator: and
+
+          desc: 根据解析出的intent精确路由，默认分支(false)处理UNKNOWN
+          title: 指令路由
+          type: if-else
+        height: 230
+        id: condition_router
+        position:
+          x: 990
+          y: 230
+        positionAbsolute:
+          x: 990
+          y: 230
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 移动指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理移动类语音指令，生成执行参数
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-move
+              role: system
+              text: |
+                你是机器人移动指令执行器。根据意图识别结果，生成标准化移动指令JSON。
+                严格输出纯JSON，不含代码块标记。
+            - id: user-move
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                意图解析: {{#intent_parser.raw#}}
+
+                输出移动执行参数JSON:
+                {"command_type":"MOVE","action":"forward|backward|turn_left|turn_right|navigate_to","parameters":{"direction":"","distance_cm":0,"speed_level":"normal","angle_degrees":0},"safety_check":true,"execution_note":""}
+          selected: false
+          title: 处理移动指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_move
+        position:
+          x: 1310
+          y: 50
+        positionAbsolute:
+          x: 1310
+          y: 50
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 停止指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理停止类语音指令，最高优先级
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-stop
+              role: system
+              text: 你是机器人停止指令执行器，停止指令最高优先级，立即响应。严格输出纯JSON。
+            - id: user-stop
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                输出JSON: {"command_type":"STOP","stop_mode":"immediate|gradual|emergency","priority":"HIGH","parameters":{"brake_force":"full","hold_position":true},"execution_note":""}
+          selected: false
+          title: 处理停止指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_stop
+        position:
+          x: 1310
+          y: 200
+        positionAbsolute:
+          x: 1310
+          y: 200
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 抓取指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理抓取/操作类语音指令
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.1
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-grab
+              role: system
+              text: 你是机器人抓取指令执行器，根据指令生成机械臂控制参数。严格输出纯JSON。
+            - id: user-grab
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                输出JSON: {"command_type":"GRAB","action":"grab|release|move_to|hold","parameters":{"target_object":"","grip_strength":"normal","arm_position":"","approach_speed":"slow"},"collision_avoidance":true,"execution_note":""}
+          selected: false
+          title: 处理抓取指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_grab
+        position:
+          x: 1310
+          y: 350
+        positionAbsolute:
+          x: 1310
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 查询状态处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理状态查询类语音指令
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.2
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-query
+              role: system
+              text: 你是机器人状态查询处理器，根据查询指令返回需要查询的信息类型。严格输出纯JSON。
+            - id: user-query
+              role: user
+              text: |
+                原始指令: {{#start.voice_command#}}
+                输出JSON: {"command_type":"QUERY","query_items":["battery","position","speed","temperature","task_status"],"response_format":"voice","priority":"normal","execution_note":""}
+          selected: false
+          title: 处理查询指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_query
+        position:
+          x: 1310
+          y: 500
+        positionAbsolute:
+          x: 1310
+          y: 500
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 未知指令处理节点 ============
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: 处理无法识别的语音指令
+          memory:
+            enabled: false
+          model:
+            completion_params:
+              temperature: 0.5
+            mode: chat
+            name: gpt-4o-mini
+            provider: openai
+          prompt_template:
+            - id: system-unknown
+              role: system
+              text: 你是机器人指令助手，当指令无法识别时给出友好提示，适合语音播报。严格输出纯JSON。
+            - id: user-unknown
+              role: user
+              text: |
+                无法识别的指令: "{{#start.voice_command#}}"
+                输出JSON: {"command_type":"UNKNOWN","error_message":"无法识别的指令，请重新说明","suggestions":["前进","后退","停止","抓取物体","查询状态"],"voice_response":"抱歉，我没听清楚，您可以试试说：前进、停止或者查询状态","execution_note":"需要人工干预"}
+          selected: false
+          title: 处理未知指令
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: handle_unknown
+        position:
+          x: 1310
+          y: 650
+        positionAbsolute:
+          x: 1310
+          y: 650
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      # ============ 各分支独立结束节点（统一输出变量名 result）============
+      - data:
+          desc: 移动指令执行结果
+          outputs:
+            - value_selector:
+                - handle_move
+                - text
+              variable: result
+          title: 结束（移动）
+          type: end
+        height: 80
+        id: end_move
+        position:
+          x: 1630
+          y: 50
+        positionAbsolute:
+          x: 1630
+          y: 50
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      - data:
+          desc: 停止指令执行结果
+          outputs:
+            - value_selector:
+                - handle_stop
+                - text
+              variable: result
+          title: 结束（停止）
+          type: end
+        height: 80
+        id: end_stop
+        position:
+          x: 1630
+          y: 200
+        positionAbsolute:
+          x: 1630
+          y: 200
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      - data:
+          desc: 抓取指令执行结果
+          outputs:
+            - value_selector:
+                - handle_grab
+                - text
+              variable: result
+          title: 结束（抓取）
+          type: end
+        height: 80
+        id: end_grab
+        position:
+          x: 1630
+          y: 350
+        positionAbsolute:
+          x: 1630
+          y: 350
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      - data:
+          desc: 查询指令执行结果
+          outputs:
+            - value_selector:
+                - handle_query
+                - text
+              variable: result
+          title: 结束（查询）
+          type: end
+        height: 80
+        id: end_query
+        position:
+          x: 1630
+          y: 500
+        positionAbsolute:
+          x: 1630
+          y: 500
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+
+      - data:
+          desc: 未知指令处理结果
+          outputs:
+            - value_selector:
+                - handle_unknown
+                - text
+              variable: result
+          title: 结束（未知）
+          type: end
+        height: 80
+        id: end_unknown
+        position:
+          x: 1630
+          y: 650
+        positionAbsolute:
+          x: 1630
+          y: 650
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
