@@ -233,7 +233,7 @@ body {
 <body>
 
 <!-- ══════════════════════════════════════════
-  飞书风格 · 平台级架构总图
+  飞书风格 · 平台级架构总图（用户/端侧/云端中枢/供应商）
 ══════════════════════════════════════════ -->
 <div class="fs-page">
   <div class="fs-title-row">
@@ -241,104 +241,132 @@ body {
       <div class="page-num">Platform Architecture</div>
       <div class="page-title">语音智能平台 · 整体架构</div>
     </div>
-    <div class="page-sub">飞书风格分层 · 接入 / 应用 / 能力 / 引擎 / 平台中枢 / 基础设施，安全·运维·研发纵向贯穿</div>
+    <div class="page-sub">部署视角分层 · 用户 / 端侧 / 云端中枢 / 供应商，研发·运维·安全纵向贯穿</div>
   </div>
 
   <div class="fs-frame">
     <div class="fs-main">
-
-      <!-- 左侧分层主体 -->
       <div class="fs-layers">
 
-        <!-- 接入层 -->
-        <div class="fs-band" style="--accent:#4285f4;">
-          <div class="fs-band-label"><span class="zh">接入层</span><span class="en">Access</span></div>
+        <!-- ① 用户层 -->
+        <div class="fs-band" style="--accent:#7b1fa2;">
+          <div class="fs-band-label">
+            <span class="zh">用户层</span>
+            <span class="en">User</span>
+          </div>
           <div class="fs-band-body">
             <div class="fs-grid cols6">
-              <div class="fs-tile t-blue">APP<span class="sub">移动 / 车机</span></div>
-              <div class="fs-tile t-blue">云端控制台</div>
-              <div class="fs-tile t-blue">ROS2 Node</div>
-              <div class="fs-tile t-blue">mic &amp; camera</div>
-              <div class="fs-tile t-blue">WebRTC 音视频</div>
-              <div class="fs-tile t-blue">座舱 / 环境信号</div>
+              <div class="fs-tile t-pur">语音输入<span class="sub">麦克风阵列</span></div>
+              <div class="fs-tile t-pur">视觉输入<span class="sub">摄像头</span></div>
+              <div class="fs-tile t-pur">触觉 / 手势</div>
+              <div class="fs-tile t-pur">APP 操作<span class="sub">移动 / 车机</span></div>
+              <div class="fs-tile t-pur">语音输出<span class="sub">扬声器</span></div>
+              <div class="fs-tile t-pur">表情 / 动作反馈</div>
             </div>
           </div>
         </div>
 
-        <!-- 应用 / 场景层 -->
-        <div class="fs-band" style="--accent:#9c27b0;">
-          <div class="fs-band-label"><span class="zh">应用层</span><span class="en">Scenario</span></div>
-          <div class="fs-band-body">
-            <div class="fs-grid cols6">
-              <div class="fs-tile t-pur">语音助手</div>
-              <div class="fs-tile t-pur">车控交互</div>
-              <div class="fs-tile t-pur">导航助手</div>
-              <div class="fs-tile t-pur">多媒体娱乐</div>
-              <div class="fs-tile t-pur">陪伴 / 闲聊</div>
-              <div class="fs-tile t-pur">可视交互 (VLM)</div>
-            </div>
+        <!-- ② 端侧层 — 两个子区块 -->
+        <div class="fs-band" style="--accent:#e65100; background:#fffaf5;">
+          <div class="fs-band-label">
+            <span class="zh">端侧层</span>
+            <span class="en">Edge</span>
           </div>
-        </div>
-
-        <!-- 能力层 -->
-        <div class="fs-band" style="--accent:#fb8c00;">
-          <div class="fs-band-label"><span class="zh">能力层</span><span class="en">Capability</span></div>
           <div class="fs-band-body" style="display:flex; flex-direction:column; gap:10px;">
-            <div class="fs-grid cols5">
-              <div class="fs-tile t-org">ASR<span class="sub">在线 / 离线</span></div>
-              <div class="fs-tile t-org">TTS<span class="sub">情感 / 超拟人</span></div>
-              <div class="fs-tile t-org">VAD / 唤醒</div>
-              <div class="fs-tile t-org">降噪 / AEC</div>
-              <div class="fs-tile t-org">声纹识别</div>
-              <div class="fs-tile t-pur">VLM 视觉理解</div>
-              <div class="fs-tile t-pur">face_id / 唇动 / 注视</div>
-              <div class="fs-tile t-blue">NLU / 意图</div>
-              <div class="fs-tile t-blue">RAG / 知识</div>
-              <div class="fs-tile t-teal">记忆 / 用户画像</div>
+
+            <!-- 感知子层 -->
+            <div style="background:#fff3e0; border:1px solid #ffe0c2; border-radius:8px; padding:10px 12px;">
+              <div style="font-size:10px; font-weight:700; color:#e65100; margin-bottom:8px; letter-spacing:.5px;">感知 · PERCEPTION</div>
+              <div class="fs-grid cols6">
+                <div class="fs-tile t-org">VAD<span class="sub">语音活动检测</span></div>
+                <div class="fs-tile t-org">唤醒词检测</div>
+                <div class="fs-tile t-org">降噪 / AEC</div>
+                <div class="fs-tile t-org">Whisper.cpp<span class="sub">本地 ASR</span></div>
+                <div class="fs-tile t-org">声纹识别</div>
+                <div class="fs-tile t-org">face_id / 唇动 / 注视</div>
+              </div>
             </div>
+
+            <!-- 推理子层 -->
+            <div style="background:#fff8f0; border:1px solid #ffd8b0; border-radius:8px; padding:10px 12px;">
+              <div style="font-size:10px; font-weight:700; color:#e65100; margin-bottom:8px; letter-spacing:.5px;">本地推理 · LOCAL INFERENCE</div>
+              <div class="fs-grid cols6">
+                <div class="fs-tile t-org">离线 ASR<span class="sub">端侧模型</span></div>
+                <div class="fs-tile t-org">离线 LLM<span class="sub">小模型</span></div>
+                <div class="fs-tile t-org">离线 TTS</div>
+                <div class="fs-tile t-teal">端到端模型<span class="sub">Qwen-omni等</span></div>
+                <div class="fs-tile t-org">VLM 推理<span class="sub">本地视觉</span></div>
+                <div class="fs-tile t-org">多模态融合</div>
+              </div>
+            </div>
+
+            <!-- 执行子层 -->
+            <div style="background:#fff3e0; border:1px solid #ffe0c2; border-radius:8px; padding:10px 12px;">
+              <div style="font-size:10px; font-weight:700; color:#e65100; margin-bottom:8px; letter-spacing:.5px;">执行 · EXECUTION</div>
+              <div class="fs-grid cols6">
+                <div class="fs-tile t-org">DM 对话管理</div>
+                <div class="fs-tile t-org">仲裁 / Scheduler</div>
+                <div class="fs-tile t-org">意图发分</div>
+                <div class="fs-tile t-org">NLP / 落域</div>
+                <div class="fs-tile t-org">TTS SDK<span class="sub">情感合成</span></div>
+                <div class="fs-tile t-org">ROS2 指令下发</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- 引擎 / 模型层 -->
-        <div class="fs-band" style="--accent:#00897b;">
-          <div class="fs-band-label"><span class="zh">引擎层</span><span class="en">Engine</span></div>
-          <div class="fs-band-body">
-            <div class="fs-grid cols5">
-              <div class="fs-tile t-blue">在线 LLM<span class="sub">MOGA 云</span></div>
-              <div class="fs-tile t-org">离线 LLM<span class="sub">端侧小模型</span></div>
-              <div class="fs-tile t-teal">端到端模型<span class="sub">Qwen-omni / VLA</span></div>
-              <div class="fs-tile t-pur">VLM 推理引擎</div>
-              <div class="fs-tile t-org">Whisper.cpp</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 平台中枢层 -->
+        <!-- ③ 云端中枢层 -->
         <div class="fs-band core" style="--accent:#1a73e8;">
-          <div class="fs-band-label"><span class="zh">平台中枢</span><span class="en">Core</span></div>
-          <div class="fs-band-body">
-            <div class="fs-grid cols6">
-              <div class="fs-tile">Master Agent<span class="sub">智能调度</span></div>
-              <div class="fs-tile">DM 对话管理</div>
-              <div class="fs-tile">Sub Agent 编排</div>
-              <div class="fs-tile">MCP / Function Call</div>
-              <div class="fs-tile">任务拆解 / 并行</div>
-              <div class="fs-tile">仲裁 / 降级路由</div>
+          <div class="fs-band-label">
+            <span class="zh">云端中枢</span>
+            <span class="en">Cloud Core</span>
+          </div>
+          <div class="fs-band-body" style="display:flex; flex-direction:column; gap:10px;">
+
+            <!-- MOGA 平台 -->
+            <div style="background:#e8f0fe; border:1.5px solid #4285f4; border-radius:8px; padding:10px 12px;">
+              <div style="font-size:10px; font-weight:700; color:#1a56db; margin-bottom:8px; letter-spacing:.5px;">MOGA 平台</div>
+              <div class="fs-grid cols6">
+                <div class="fs-tile t-blue">Master Agent<span class="sub">智能调度</span></div>
+                <div class="fs-tile t-blue">Sub Agent 编排</div>
+                <div class="fs-tile t-blue">在线 LLM<span class="sub">云端大模型</span></div>
+                <div class="fs-tile t-blue">在线 ASR</div>
+                <div class="fs-tile t-blue">在线 TTS<span class="sub">超拟人</span></div>
+                <div class="fs-tile t-blue">MCP / Function Call</div>
+              </div>
             </div>
+
+            <!-- 能力服务 -->
+            <div style="background:#f0f4ff; border:1px solid #c5d8ff; border-radius:8px; padding:10px 12px;">
+              <div style="font-size:10px; font-weight:700; color:#1a56db; margin-bottom:8px; letter-spacing:.5px;">能力服务</div>
+              <div class="fs-grid cols6">
+                <div class="fs-tile t-blue">任务拆解 / 并行执行</div>
+                <div class="fs-tile t-blue">RAG / 知识库</div>
+                <div class="fs-tile t-blue">NLU / 意图服务</div>
+                <div class="fs-tile t-teal">记忆 / 用户画像</div>
+                <div class="fs-tile t-teal">长时记忆存储</div>
+                <div class="fs-tile t-blue">降级 / 路由策略</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- 资源 / 基础设施层 -->
-        <div class="fs-band" style="--accent:#43a047;">
-          <div class="fs-band-label"><span class="zh">资源层</span><span class="en">Resource</span></div>
+        <!-- ④ 供应商层 -->
+        <div class="fs-band" style="--accent:#455a64; background:#f8fafb;">
+          <div class="fs-band-label">
+            <span class="zh">供应商层</span>
+            <span class="en">Vendor</span>
+          </div>
           <div class="fs-band-body">
             <div class="fs-grid cols6">
-              <div class="fs-tile t-pur">Agent 仓库<span class="sub">车控/导航/三方</span></div>
-              <div class="fs-tile t-grn">MCP 工具池<span class="sub">高德/Websearch</span></div>
-              <div class="fs-tile t-pur">产品配置中心</div>
-              <div class="fs-tile t-teal">记忆 / 数据存储</div>
-              <div class="fs-tile t-gray">模型仓库</div>
-              <div class="fs-tile t-gray">供应商接入<span class="sub">豆包/讯飞</span></div>
+              <div class="fs-tile t-gray">讯飞 ASR / TTS</div>
+              <div class="fs-tile t-gray">豆包 AI Agent</div>
+              <div class="fs-tile t-gray">高德地图 MCP</div>
+              <div class="fs-tile t-gray">Websearch MCP</div>
+              <div class="fs-tile t-gray">多模态视觉模型<span class="sub">云端 VLM</span></div>
+              <div class="fs-tile t-gray">其他第三方 Agent</div>
             </div>
           </div>
         </div>
