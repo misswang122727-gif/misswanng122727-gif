@@ -233,6 +233,119 @@ body {
 <body>
 
 <!-- ══════════════════════════════════════════
+  计划架构 · 数据流转图（SVG 连线）
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-num">Data Flow</div>
+      <div class="page-title">计划架构 · 数据流转</div>
+    </div>
+    <div class="page-sub">云端 / 本体 分界 · 箭头表示数据流向 · 黄=需要改造，红=新增</div>
+  </div>
+
+  <svg viewBox="0 0 1240 880" style="width:100%; height:auto; font-family:'Microsoft YaHei','PingFang SC',sans-serif;">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+      </marker>
+    </defs>
+
+    <!-- ===== 图例 ===== -->
+    <rect x="40" y="36" width="70" height="34" rx="4" fill="#cdaa3d" stroke="#a8862a"/>
+    <text x="120" y="58" font-size="14" fill="#333">需要改造</text>
+    <rect x="40" y="84" width="70" height="34" rx="4" fill="#cf4a44" stroke="#a83833"/>
+    <text x="120" y="106" font-size="14" fill="#333">新增</text>
+
+    <!-- ===== 云端/本体 分界线 ===== -->
+    <line x1="60" y1="470" x2="1180" y2="470" stroke="#888" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="150" y="458" font-size="14" fill="#777">云端</text>
+    <text x="150" y="490" font-size="14" fill="#777">本体</text>
+
+    <!-- ============ 连线（先画线，后画框） ============ -->
+    <!-- TTS ↕ 云端中枢 -->
+    <line x1="630" y1="155" x2="630" y2="220" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <!-- 云端中枢 → VLM (双向，折线) -->
+    <path d="M690,250 L760,250 L760,180 L825,180" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <path d="M690,270 L780,270 L780,200 L825,200" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" transform="translate(0,-30)"/>
+    <!-- 识别(云) → 云端中枢 -->
+    <line x1="395" y1="255" x2="555" y2="255" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 云端中枢 ↔ 大模型 -->
+    <line x1="690" y1="260" x2="825" y2="260" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <!-- 云端中枢 → 第三方生态 (折线) -->
+    <path d="M690,285 L760,285 L760,355 L825,355" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 语音AI云服务 ↑ 识别(云) -->
+    <line x1="340" y1="370" x2="340" y2="290" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 语音AI云服务 ↑ 云端中枢 -->
+    <line x1="630" y1="370" x2="630" y2="305" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <!-- 本地中枢 ↕ 语音AI云服务 (跨界) -->
+    <line x1="665" y1="540" x2="665" y2="420" stroke="#555" stroke-width="1.8" marker-end="url(#arr)" marker-start="url(#arr)"/>
+
+    <!-- 用户 → Audio → 信号处理 -->
+    <path d="M205,690 L240,690 L240,575 L275,575" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <text x="218" y="568" font-size="13" fill="#555">Audio</text>
+    <!-- 用户 → 唤醒 -->
+    <path d="M205,700 L240,700 L240,690" fill="none" stroke="#555" stroke-width="1.6"/>
+    <path d="M240,720 L240,700" stroke="none"/>
+    <!-- 信号处理 → 唤醒 -->
+    <line x1="330" y1="610" x2="330" y2="655" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 唤醒 → 本地中枢 (Video 走线，折线) -->
+    <path d="M390,690 L470,690 L470,650 L605,650" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <text x="500" y="680" font-size="13" fill="#555">Video</text>
+    <!-- 信号处理 → 识别(本) -->
+    <line x1="390" y1="570" x2="445" y2="570" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 识别(本) → 本地中枢 -->
+    <line x1="545" y1="575" x2="605" y2="575" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 本地中枢 → Speaker -->
+    <line x1="720" y1="560" x2="950" y2="560" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+    <!-- 本地中枢 ↔ 语音合成 -->
+    <line x1="720" y1="585" x2="825" y2="585" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <!-- 本地中枢 ↔ 业务层 -->
+    <line x1="720" y1="675" x2="825" y2="675" stroke="#555" stroke-width="1.6" marker-end="url(#arr)" marker-start="url(#arr)"/>
+
+    <!-- ============ 方框 ============ -->
+    <!-- 云端 -->
+    <g><rect x="575" y="95" width="110" height="60" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="630" y="130" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">TTS</text></g>
+    <g><rect x="825" y="150" width="110" height="55" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="880" y="183" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">VLM</text></g>
+    <g><rect x="285" y="225" width="110" height="60" rx="6" fill="#eef0f4" stroke="#c4cbd6"/><text x="340" y="260" font-size="14" fill="#333" text-anchor="middle">识别</text></g>
+    <g><rect x="570" y="220" width="120" height="75" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="630" y="263" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">云端中枢</text></g>
+    <g><rect x="825" y="230" width="110" height="60" rx="6" fill="#cdaa3d" stroke="#a8862a"/><text x="880" y="265" font-size="14" fill="#fff" text-anchor="middle" font-weight="bold">大模型</text></g>
+    <g><rect x="825" y="333" width="110" height="44" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="880" y="360" font-size="13" fill="#fff" text-anchor="middle" font-weight="bold">第三方生态</text></g>
+    <g><rect x="240" y="370" width="450" height="48" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="465" y="400" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">语音 AI 云服务</text></g>
+    <!-- 大模型右侧 联网搜索/RAG 大括号 -->
+    <path d="M945,235 q10,0 10,12 v8 q0,12 12,12 q-12,0 -12,12 v8 q0,12 -10,12" fill="none" stroke="#888" stroke-width="1.4"/>
+    <text x="975" y="252" font-size="13" fill="#444">联网搜索</text>
+    <text x="975" y="300" font-size="13" fill="#444">RAG</text>
+
+    <!-- 本体 -->
+    <!-- 用户图标 -->
+    <circle cx="150" cy="675" r="16" fill="none" stroke="#555" stroke-width="1.6"/>
+    <path d="M126,720 q24,-30 48,0" fill="none" stroke="#555" stroke-width="1.6"/>
+    <g><rect x="275" y="540" width="115" height="65" rx="6" fill="#eef0f4" stroke="#c4cbd6"/><text x="332" y="568" font-size="13" fill="#333" text-anchor="middle">信号处理</text><text x="332" y="588" font-size="13" fill="#333" text-anchor="middle">多模态</text></g>
+    <g><rect x="275" y="658" width="115" height="52" rx="6" fill="#eef0f4" stroke="#c4cbd6"/><text x="332" y="690" font-size="14" fill="#333" text-anchor="middle">唤醒</text></g>
+    <g><rect x="445" y="540" width="100" height="65" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="495" y="578" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">识别</text></g>
+    <g><rect x="605" y="540" width="115" height="135" rx="6" fill="#cf4a44" stroke="#a83833"/><text x="662" y="612" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">本地中枢</text></g>
+    <g><rect x="825" y="560" width="115" height="50" rx="6" fill="#eef0f4" stroke="#c4cbd6"/><text x="882" y="590" font-size="14" fill="#333" text-anchor="middle">语音合成</text></g>
+    <g><rect x="825" y="650" width="115" height="50" rx="6" fill="#eef0f4" stroke="#c4cbd6"/><text x="882" y="680" font-size="14" fill="#333" text-anchor="middle">业务层</text></g>
+    <!-- Speaker 图标 -->
+    <path d="M950,545 l20,0 l20,-15 l0,60 l-20,-15 l-20,0 z" fill="#eef0f4" stroke="#555" stroke-width="1.4"/>
+    <text x="1000" y="578" font-size="14" fill="#555">Speaker</text>
+
+    <!-- 本地中枢 底部 竖排说明（每列自上而下） -->
+    <path d="M608,683 q0,8 8,8 h70 q8,0 8,-8" fill="none" stroke="#bbb" stroke-width="1.2"/>
+    <g font-size="12" fill="#555" text-anchor="middle">
+      <text x="615" y="710" writing-mode="tb" letter-spacing="2">对话管理</text>
+      <text x="640" y="710" writing-mode="tb" letter-spacing="2">拒识</text>
+      <text x="662" y="710" writing-mode="tb" letter-spacing="2">落域</text>
+      <text x="684" y="710" writing-mode="tb" letter-spacing="2">提槽</text>
+      <text x="706" y="710" writing-mode="tb" letter-spacing="2">后处理</text>
+      <text x="728" y="710" writing-mode="tb" letter-spacing="2">仲裁</text>
+    </g>
+  </svg>
+</div>
+
+
+<!-- ══════════════════════════════════════════
   飞书风格 · 平台级架构总图（用户/端侧/云端中枢/供应商）
 ══════════════════════════════════════════ -->
 <div class="fs-page">
