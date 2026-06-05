@@ -165,6 +165,230 @@ body {
 <body>
 
 <!-- ══════════════════════════════════════════
+  DIAGRAM 0A — 平台化整体架构总览
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-num">Diagram 00</div>
+      <div class="page-title">平台化整体架构总览</div>
+    </div>
+    <div class="page-sub">平台视角 · 接入层 / 能力层 / 平台中枢 / 资源层 自上而下分层</div>
+  </div>
+
+  <!-- L0 接入层 -->
+  <div class="panel p-dash-blue">
+    <div class="ptitle blue" style="font-size:12px;">接入层 · ACCESS</div>
+    <div class="row" style="flex-wrap:wrap; gap:8px; justify-content:center;">
+      <div class="chip c-blue" style="padding:8px 18px;">APP / 云端控制</div>
+      <div class="chip c-blue" style="padding:8px 18px;">ROS2 Node 接入</div>
+      <div class="chip c-blue" style="padding:8px 18px;">mic &amp; camera</div>
+      <div class="chip c-blue" style="padding:8px 18px;">座舱 / 环境信号</div>
+      <div class="chip c-blue" style="padding:8px 18px;">WebRTC 音视频流</div>
+    </div>
+  </div>
+  <div class="av">↕</div>
+
+  <!-- L1 能力层 (语音 + 视觉 + 语义) -->
+  <div class="row" style="gap:12px; align-items:stretch; margin-bottom:8px;">
+    <div class="panel p-org" style="flex:1;">
+      <div class="ptitle org" style="font-size:12px;">语音能力</div>
+      <div class="wrap">
+        <div class="chip c-org" style="font-size:11px;">ASR（在线/离线）</div>
+        <div class="chip c-org" style="font-size:11px;">VAD / 唤醒</div>
+        <div class="chip c-org" style="font-size:11px;">降噪 / AEC</div>
+        <div class="chip c-org" style="font-size:11px;">声纹</div>
+        <div class="chip c-org" style="font-size:11px;">TTS / 情感TTS</div>
+        <div class="chip c-teal" style="font-size:11px;">端到端语音</div>
+      </div>
+    </div>
+    <div class="panel p-pur" style="flex:1;">
+      <div class="ptitle pur" style="font-size:12px;">视觉 / VLM 能力</div>
+      <div class="wrap">
+        <div class="chip c-pur" style="font-size:11px;">face_id</div>
+        <div class="chip c-pur" style="font-size:11px;">唇动 / 注视</div>
+        <div class="chip c-pur" style="font-size:11px;">多模态理解</div>
+        <div class="chip c-pur" style="font-size:11px;">VLM 推理</div>
+        <div class="chip c-pur" style="font-size:11px;">去畸变</div>
+      </div>
+    </div>
+    <div class="panel p-blue" style="flex:1;">
+      <div class="ptitle blue" style="font-size:12px;">语义 / 认知能力</div>
+      <div class="wrap">
+        <div class="chip c-blue" style="font-size:11px;">NLU / 意图</div>
+        <div class="chip c-blue" style="font-size:11px;">LLM（在线/离线）</div>
+        <div class="chip c-blue" style="font-size:11px;">RAG</div>
+        <div class="chip c-blue" style="font-size:11px;">记忆 / 用户画像</div>
+      </div>
+    </div>
+  </div>
+  <div class="av">↕</div>
+
+  <!-- L2 平台中枢 -->
+  <div class="panel p-dash-blue" style="border-color:#1a73e8; background:#eef4ff;">
+    <div class="ptitle blue" style="font-size:13px;">平台中枢 · CORE PLATFORM（自研 MOGA + 供应商混合）</div>
+    <div class="row" style="flex-wrap:wrap; gap:10px; justify-content:center;">
+      <div class="chip c-dark" style="padding:8px 16px;">Master Agent 智能调度</div>
+      <div class="chip c-dark" style="padding:8px 16px;">DM 对话管理 / 仲裁</div>
+      <div class="chip c-dark" style="padding:8px 16px;">Sub Agent 编排</div>
+      <div class="chip c-dark" style="padding:8px 16px;">MCP / Function Call</div>
+      <div class="chip c-dark" style="padding:8px 16px;">任务拆解 / 并行执行</div>
+      <div class="chip c-dark" style="padding:8px 16px;">降级 / 路由策略</div>
+    </div>
+  </div>
+  <div class="av">↕</div>
+
+  <!-- L3 资源层 -->
+  <div class="row" style="gap:12px; align-items:stretch;">
+    <div class="panel p-pur" style="flex:1;">
+      <div class="ptitle pur" style="font-size:12px;">Agent 资源</div>
+      <div class="wrap">
+        <div class="chip c-pur" style="font-size:11px;">车控 / 导航 / 多媒体</div>
+        <div class="chip c-pur" style="font-size:11px;">VLM 视觉 Agent</div>
+        <div class="chip c-gray" style="font-size:11px;">豆包 / 讯飞第三方</div>
+      </div>
+    </div>
+    <div class="panel p-grn" style="flex:1;">
+      <div class="ptitle grn" style="font-size:12px;">MCP 工具资源</div>
+      <div class="wrap">
+        <div class="chip c-grn" style="font-size:11px;">高德 / Websearch</div>
+        <div class="chip c-grn" style="font-size:11px;">车控执行</div>
+        <div class="chip c-grn" style="font-size:11px;">端侧实时数据</div>
+      </div>
+    </div>
+    <div class="panel p-pur" style="flex:1;">
+      <div class="ptitle pur" style="font-size:12px;">产品 / 配置资源</div>
+      <div class="wrap">
+        <div class="chip c-pur" style="font-size:11px;">人设 / 中框配置</div>
+        <div class="chip c-pur" style="font-size:11px;">对话策略</div>
+        <div class="chip c-pur" style="font-size:11px;">技能配置单</div>
+      </div>
+    </div>
+    <div class="panel p-teal" style="flex:1;">
+      <div class="ptitle teal" style="font-size:12px;">数据 / 记忆资源</div>
+      <div class="wrap">
+        <div class="chip c-teal" style="font-size:11px;">长时记忆</div>
+        <div class="chip c-teal" style="font-size:11px;">用户画像</div>
+        <div class="chip c-teal" style="font-size:11px;">交互记录 / log</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════
+  DIAGRAM 0B — 模块架构（依赖 / 调用关系）
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-num">Diagram 00B</div>
+      <div class="page-title">模块架构 · 调用与依赖关系</div>
+    </div>
+    <div class="page-sub">各模块间的数据流向与调用依赖（自左向右）</div>
+  </div>
+
+  <div class="row" style="align-items:stretch; gap:0;">
+
+    <!-- 输入模块 -->
+    <div class="col" style="flex:1; gap:8px; justify-content:center;">
+      <div class="chip c-blue" style="padding:10px;">音视频采集模块</div>
+      <div class="chip c-blue" style="padding:10px;">信号感知模块</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <!-- 感知模块 -->
+    <div class="col" style="flex:1.2; gap:8px; justify-content:center;">
+      <div class="panel p-org" style="padding:10px;">
+        <div class="ptitle org">感知模块</div>
+        <div class="col" style="gap:5px;">
+          <div class="chip c-org" style="font-size:11px;">ASR 模块</div>
+          <div class="chip c-pur" style="font-size:11px;">VLM 模块</div>
+          <div class="chip c-gray" style="font-size:11px;">前端信号处理</div>
+        </div>
+      </div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <!-- 理解模块 -->
+    <div class="col" style="flex:1; gap:8px; justify-content:center;">
+      <div class="panel p-blue" style="padding:10px;">
+        <div class="ptitle blue">理解模块</div>
+        <div class="col" style="gap:5px;">
+          <div class="chip c-blue" style="font-size:11px;">NLU 模块</div>
+          <div class="chip c-blue" style="font-size:11px;">落域 / 分类</div>
+        </div>
+      </div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <!-- 决策中枢模块 -->
+    <div class="col" style="flex:1.3; gap:8px; justify-content:center;">
+      <div class="panel p-dash-blue" style="padding:10px; background:#eef4ff;">
+        <div class="ptitle blue">决策中枢模块</div>
+        <div class="col" style="gap:5px;">
+          <div class="chip c-dark" style="font-size:11px;">Master Agent</div>
+          <div class="chip c-dark" style="font-size:11px;">DM / 仲裁</div>
+          <div class="chip c-dark" style="font-size:11px;">LLM 模块</div>
+        </div>
+      </div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <!-- 执行模块 -->
+    <div class="col" style="flex:1.2; gap:8px; justify-content:center;">
+      <div class="panel p-grn" style="padding:10px;">
+        <div class="ptitle grn">执行模块</div>
+        <div class="col" style="gap:5px;">
+          <div class="chip c-pur" style="font-size:11px;">Sub Agent</div>
+          <div class="chip c-grn" style="font-size:11px;">MCP 工具</div>
+          <div class="chip c-sky" style="font-size:11px;">Agent Skill</div>
+        </div>
+      </div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <!-- 输出模块 -->
+    <div class="col" style="flex:1; gap:8px; justify-content:center;">
+      <div class="panel p-org" style="padding:10px;">
+        <div class="ptitle org">输出模块</div>
+        <div class="col" style="gap:5px;">
+          <div class="chip c-org" style="font-size:11px;">TTS 模块</div>
+          <div class="chip c-blue" style="font-size:11px;">表情 / 动作</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底层支撑：贯穿所有模块 -->
+  <div class="av" style="margin-top:14px;">▲ &nbsp; 贯穿支撑 &nbsp; ▲</div>
+  <div class="row" style="gap:12px; align-items:stretch;">
+    <div class="panel p-teal" style="flex:1;">
+      <div class="ptitle teal">记忆 / 上下文模块（被各模块读写）</div>
+      <div class="wrap">
+        <div class="chip c-teal" style="font-size:11px;">长时记忆</div>
+        <div class="chip c-teal" style="font-size:11px;">用户画像</div>
+        <div class="chip c-teal" style="font-size:11px;">感知融合</div>
+        <div class="chip c-teal" style="font-size:11px;">交互记录</div>
+      </div>
+    </div>
+    <div class="panel p-gray" style="flex:1;">
+      <div class="ptitle gray">基础支撑模块（base）</div>
+      <div class="wrap">
+        <div class="chip c-gray" style="font-size:11px;">Network</div>
+        <div class="chip c-gray" style="font-size:11px;">config</div>
+        <div class="chip c-gray" style="font-size:11px;">Log</div>
+        <div class="chip c-gray" style="font-size:11px;">中控通信层</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════
   DIAGRAM 1 — 整体架构（语音组视角）
 ══════════════════════════════════════════ -->
 <div class="page">
