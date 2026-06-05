@@ -3,569 +3,688 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>机器人语音交互系统架构图</title>
+<title>语音组系统架构图</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; background: #f0f2f5; padding: 24px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+  background: #f0f2f5; padding: 28px; color: #1a1a2e;
+}
 
-  /* ── Page card ── */
-  .page {
-    background: white; padding: 40px; margin-bottom: 48px;
-    border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    max-width: 1300px; margin-left: auto; margin-right: auto;
-    overflow-x: auto;
-  }
-  .page-header { margin-bottom: 28px; border-bottom: 2px solid #e8edf2; padding-bottom: 14px; }
-  .page-num { font-size: 11px; color: #999; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
-  .page-title { font-size: 20px; font-weight: 700; color: #1a2030; margin-top: 4px; }
-  .page-sub { font-size: 13px; color: #777; margin-top: 4px; }
+/* ── Page Card ── */
+.page {
+  background: white; padding: 44px 48px;
+  margin-bottom: 56px; border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  max-width: 1400px; margin-left: auto; margin-right: auto;
+  overflow-x: auto;
+}
+.page-header {
+  display: flex; align-items: flex-end; gap: 16px;
+  margin-bottom: 32px; padding-bottom: 16px;
+  border-bottom: 2px solid #eef1f6;
+}
+.page-num {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  color: #aaa; text-transform: uppercase;
+}
+.page-title { font-size: 22px; font-weight: 800; color: #111; }
+.page-sub { font-size: 12px; color: #888; margin-left: auto; }
 
-  /* ── Generic primitives ── */
-  .row { display: flex; gap: 12px; align-items: flex-start; }
-  .col { display: flex; flex-direction: column; gap: 10px; }
-  .center { text-align: center; }
-  .arrow-v { text-align: center; font-size: 18px; color: #777; line-height: 1.2; padding: 2px 0; }
-  .arrow-label { font-size: 10px; color: #999; text-align: center; }
-  .divider-h { border: none; border-top: 2px dashed #ccc; margin: 16px 0; }
-  .zone-label-v {
-    font-size: 18px; font-weight: 700; color: #e53935;
-    writing-mode: vertical-rl; letter-spacing: 6px;
-    min-width: 28px; display: flex; align-items: center; justify-content: center;
-  }
+/* ── Chips ── */
+.chip {
+  border-radius: 6px; padding: 5px 12px; font-size: 12px;
+  text-align: center; border: 1.5px solid; display: inline-block;
+  white-space: nowrap; line-height: 1.5;
+}
+.c-blue  { background:#e8f0fe; border-color:#4285f4; color:#1a56db; font-weight:600; }
+.c-sky   { background:#e0f4ff; border-color:#0ea5e9; color:#0369a1; }
+.c-grn   { background:#e8f5e9; border-color:#43a047; color:#1b5e20; }
+.c-org   { background:#fff3e0; border-color:#fb8c00; color:#7a4100; }
+.c-pur   { background:#f3e5f5; border-color:#9c27b0; color:#4a148c; }
+.c-teal  { background:#e0f2f1; border-color:#00897b; color:#004d40; }
+.c-red   { background:#ffebee; border-color:#e53935; color:#b71c1c; }
+.c-gray  { background:#f5f5f5; border-color:#9e9e9e; color:#424242; }
+.c-dark  { background:#eceff1; border-color:#546e7a; color:#263238; font-weight:600; }
+.c-amber { background:#fffde7; border-color:#fdd835; color:#6d4c00; }
 
-  /* ── Box tokens ── */
-  .chip {
-    border-radius: 6px; padding: 6px 12px; font-size: 12px;
-    text-align: center; white-space: nowrap;
-    border: 1.5px solid; display: inline-block;
-  }
-  /* orange = MOGA / local */
-  .chip-o { background: #fff3e0; border-color: #f5a623; color: #7a4f00; }
-  /* blue = core / highlight */
-  .chip-b { background: #e3f0ff; border-color: #2979ff; color: #0d47a1; }
-  /* purple = vendor / cloud */
-  .chip-p { background: #f3e5f5; border-color: #9c27b0; color: #4a148c; }
-  /* green = engineering node */
-  .chip-g { background: #e8f5e9; border-color: #43a047; color: #1b5e20; }
-  /* grey = base util */
-  .chip-k { background: #f5f5f5; border-color: #9e9e9e; color: #333; }
-  /* red accent */
-  .chip-r { background: #ffebee; border-color: #e53935; color: #b71c1c; }
-  /* teal */
-  .chip-t { background: #e0f2f1; border-color: #00897b; color: #004d40; }
+/* ── Panel wrappers ── */
+.panel {
+  border-radius: 10px; padding: 14px 16px; border: 1.5px solid;
+}
+.p-blue  { background:#f0f4ff; border-color:#4285f4; }
+.p-blue2 { background:#e8f0fe; border-color:#1a73e8; }
+.p-sky   { background:#f0f9ff; border-color:#0ea5e9; }
+.p-grn   { background:#f1f8f1; border-color:#43a047; }
+.p-org   { background:#fff8f0; border-color:#fb8c00; }
+.p-pur   { background:#fdf5ff; border-color:#9c27b0; }
+.p-teal  { background:#f0faf9; border-color:#00897b; }
+.p-gray  { background:#fafafa; border-color:#ccc; }
+.p-dash-blue { background:#f7faff; border: 2px dashed #4285f4; border-radius:10px; padding:14px 16px; }
+.p-dash-pur  { background:#fdf5ff; border: 2px dashed #9c27b0; border-radius:10px; padding:14px 16px; }
+.p-dash-grn  { background:#f3fbf3; border: 2px dashed #43a047; border-radius:10px; padding:14px 16px; }
 
-  /* ── Panel / Zone wrappers ── */
-  .panel {
-    border-radius: 8px; padding: 14px 16px;
-    border: 1.5px solid;
-  }
-  .panel-o { background: #fffbf4; border-color: #f5a623; }
-  .panel-b { background: #f0f6ff; border-color: #2979ff; }
-  .panel-p { background: #fdf5ff; border-color: #9c27b0; }
-  .panel-g { background: #f4fbf4; border-color: #43a047; }
-  .panel-k { background: #fafafa; border-color: #bdbdbd; }
-  .panel-t { background: #f0faf9; border-color: #00897b; }
-  .panel-title {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-    margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(0,0,0,0.08);
-  }
-  .panel-title.blue { color: #2979ff; }
-  .panel-title.orange { color: #f5a623; }
-  .panel-title.purple { color: #9c27b0; }
-  .panel-title.green { color: #43a047; }
-  .panel-title.teal { color: #00897b; }
+.ptitle {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.ptitle.blue  { color:#1a73e8; }
+.ptitle.sky   { color:#0ea5e9; }
+.ptitle.grn   { color:#2e7d32; }
+.ptitle.org   { color:#e65100; }
+.ptitle.pur   { color:#7b1fa2; }
+.ptitle.teal  { color:#00695c; }
+.ptitle.gray  { color:#555; }
+.ptitle.red   { color:#c62828; }
 
-  /* ── Diagram 1: Overall Architecture ── */
-  .d1-top { display: flex; justify-content: center; margin-bottom: 8px; }
-  .d1-body { display: flex; gap: 8px; align-items: stretch; }
-  .d1-main { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+/* ── Layout helpers ── */
+.row   { display:flex; gap:10px; align-items:flex-start; }
+.col   { display:flex; flex-direction:column; gap:8px; }
+.wrap  { display:flex; flex-wrap:wrap; gap:6px; }
+.av    { text-align:center; font-size:18px; color:#aaa; padding:2px 0; line-height:1; }
+.ah    { display:flex; align-items:center; font-size:11px; color:#aaa; gap:4px; }
+.albl  { font-size:10px; color:#aaa; text-align:center; }
 
-  .local-wrap { border: 2px solid #f5a623; border-radius: 10px; background: #fffdf7; padding: 16px; }
-  .cloud-wrap { border: 2px solid #2979ff; border-radius: 10px; background: #f6faff; padding: 16px; margin-top: 12px; }
+/* ── Zone label (vertical red text) ── */
+.zone-v {
+  font-size:16px; font-weight:800; color:#e53935;
+  writing-mode:vertical-rl; letter-spacing:6px;
+  min-width:24px; display:flex; align-items:center; justify-content:center;
+}
 
-  /* Master / Sub agent styling */
-  .agent-master { border: 2px dashed #2979ff; border-radius: 10px; padding: 14px; background: #f7fbff; }
-  .agent-sub { border: 1.5px solid #9c27b0; border-radius: 8px; padding: 12px; background: #fdf5ff; min-width: 160px; }
-  .memory-panel { border: 1.5px solid #00897b; border-radius: 8px; padding: 12px; background: #f0faf9; }
-  .mcp-panel { border: 1.5px solid #43a047; border-radius: 8px; padding: 12px; background: #f4fbf4; }
+/* ═══════════════════ DIAGRAM 1 specific ═══════════════════ */
+.d1-wrap   { display:flex; gap:10px; align-items:stretch; }
+.d1-main   { flex:1; display:flex; flex-direction:column; gap:10px; }
+.d1-right  { display:flex; flex-direction:column; align-items:center; justify-content:center; width:56px; }
 
-  /* ── Diagram 2: Voice LLM ── */
-  .pipeline { display: flex; align-items: center; gap: 0; }
-  .pipeline-arrow { font-size: 20px; color: #bbb; padding: 0 6px; flex-shrink: 0; }
-  .pipeline-node {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 6px; flex: 1; min-width: 80px;
-  }
-  .pipeline-node .chip { width: 100%; }
+.tts-engine {
+  background:#1a73e8; border-radius:8px; color:white;
+  writing-mode:vertical-rl; letter-spacing:6px; font-size:13px;
+  font-weight:700; padding:20px 10px; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  min-height:480px; line-height:1.8;
+}
 
-  .voice-section { display: flex; gap: 12px; }
+/* Master Agent dashed border */
+.master-agent {
+  border: 2px dashed #4285f4; border-radius:12px;
+  padding:16px; background:#f7faff; position:relative;
+}
+.master-label {
+  position:absolute; top:-11px; left:14px;
+  background:#4285f4; color:white; font-size:11px; font-weight:700;
+  padding:2px 10px; border-radius:4px; letter-spacing:0.5px;
+}
+.sub-agent {
+  border: 1.5px solid #9c27b0; border-radius:10px;
+  padding:14px; background:#fdf5ff; position:relative;
+}
+.sub-label {
+  position:absolute; top:-11px; left:14px;
+  background:#9c27b0; color:white; font-size:11px; font-weight:700;
+  padding:2px 10px; border-radius:4px;
+}
 
-  /* ── Diagram 3: Engineering ── */
-  .eng-app { background: white; border: 1.5px solid #333; border-radius: 6px; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; }
-  .eng-linux { border: 2px dashed #90a4ae; border-radius: 8px; padding: 14px; margin-top: 10px; }
-  .eng-linux-label { font-size: 11px; font-weight: 700; color: #607d8b; margin-bottom: 10px; }
-  .eng-central { background: white; border: 1.5px solid #455a64; border-radius: 6px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; }
-  .eng-comm { background: #3d5afe; border-radius: 6px; padding: 10px; text-align: center; color: white; font-size: 13px; font-weight: 700; margin: 8px 0; }
-  .eng-voice { border: 2px dashed #90a4ae; border-radius: 8px; padding: 14px; }
-  .eng-ext { background: #e8f5e9; border: 1.5px solid #43a047; border-radius: 6px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .eng-nodes { display: flex; gap: 10px; }
-  .eng-node { background: #e8f5e9; border: 1.5px solid #43a047; border-radius: 8px; padding: 12px; flex: 1; }
-  .eng-node.rtc { flex: 0 0 100px; }
-  .eng-node-title { font-size: 11px; font-weight: 700; color: #2e7d32; text-align: center; margin-bottom: 8px; }
-  .chip-grid { display: flex; flex-wrap: wrap; gap: 4px; }
-  .sched-layout { display: flex; gap: 8px; }
-  .sched-asr-llm { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-  .sched-core { border: 1.5px solid #bdbdbd; border-radius: 6px; background: white; padding: 8px; flex: 1; }
-  .eng-base { background: #e8f5e9; border: 1.5px solid #43a047; border-radius: 6px; padding: 10px; margin-top: 10px; }
-  .eng-base-title { font-size: 11px; font-weight: 700; color: #2e7d32; margin-bottom: 6px; }
+/* task decompose box */
+.task-box {
+  border:1.5px solid #43a047; border-radius:8px;
+  background:#f3fbf3; padding:12px; flex:1;
+}
 
-  /* legend */
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555; }
-  .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; }
+/* ═══════════════════ DIAGRAM 2 specific ═══════════════════ */
+.pipe-row {
+  display:flex; align-items:stretch; gap:0;
+  border:1.5px solid #e0e0e0; border-radius:8px; overflow:hidden;
+}
+.pipe-cell {
+  flex:1; padding:10px 8px; text-align:center;
+  border-right:1.5px solid #e0e0e0; display:flex;
+  flex-direction:column; gap:6px; align-items:center; justify-content:center;
+  font-size:12px;
+}
+.pipe-cell:last-child { border-right:none; }
+.pipe-arrow {
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:#ccc; padding:0 2px; flex-shrink:0;
+  align-self:center;
+}
+
+/* ═══════════════════ DIAGRAM 3 specific ═══════════════════ */
+.d3-linux { border:2px dashed #90a4ae; border-radius:10px; padding:16px; margin-top:10px; }
+.d3-lbl   { font-size:11px; font-weight:700; color:#607d8b; margin-bottom:10px; }
+.d3-comm  { background:#3d5afe; border-radius:8px; padding:10px; text-align:center; color:white; font-size:14px; font-weight:700; margin:8px 0; }
+.d3-voice { border:2px dashed #90a4ae; border-radius:10px; padding:14px; }
+.d3-ext   { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:10px; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.d3-node  { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:12px; flex:1; }
+.d3-ntit  { font-size:11px; font-weight:700; color:#2e7d32; text-align:center; margin-bottom:8px; }
+.d3-core  { background:white; border:1.5px solid #bdbdbd; border-radius:6px; padding:8px; }
+.d3-base  { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:10px; margin-top:10px; }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     DIAGRAM 1 — 整体架构
-══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+  DIAGRAM 1 — 整体架构（语音组视角）
+══════════════════════════════════════════ -->
 <div class="page">
   <div class="page-header">
-    <div class="page-num">Diagram 01</div>
-    <div class="page-title">整体系统架构</div>
-    <div class="page-sub">展示本地端与云端各功能模块的整体组织结构及交互关系</div>
+    <div>
+      <div class="page-num">Diagram 01</div>
+      <div class="page-title">整体系统架构</div>
+    </div>
+    <div class="page-sub">语音组视角 · 端侧 + 云端中枢 + Agent + VLM 全链路</div>
   </div>
 
-  <!-- Legend -->
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#fff3e0;border-color:#f5a623;"></div>本地 MOGA 模块</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e3f0ff;border-color:#2979ff;"></div>核心 AI / Agent</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#f3e5f5;border-color:#9c27b0;"></div>供应商 / 第三方</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e0f2f1;border-color:#00897b;"></div>记忆 / 信号</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e8f5e9;border-color:#43a047;"></div>MCP 工具</div>
-  </div>
-
-  <!-- Top: ROS2 Nodes -->
-  <div class="d1-top">
-    <div class="chip chip-o" style="padding:10px 40px; font-size:13px;">Node1 &nbsp;·&nbsp; Node2 &nbsp;·&nbsp; …</div>
-  </div>
-  <div class="arrow-v">↑↓<br><span class="arrow-label">ROS2</span></div>
-
-  <!-- Body -->
-  <div class="d1-body">
-    <!-- Zone label -->
-    <div class="zone-label-v" style="color:#e53935;">本地</div>
-
+  <div class="d1-wrap">
     <div class="d1-main">
-      <!-- Local zone -->
-      <div class="local-wrap">
-        <div class="row" style="align-items:flex-start; gap:14px;">
 
-          <!-- Left: 意图发分 + DM + 本地LLM -->
-          <div class="col" style="flex:1.2;">
-            <div class="chip chip-o" style="font-size:13px; padding:10px;">意图发分</div>
+      <!-- Row 0: Audio / Video inputs + 端到端大模型 -->
+      <div class="row" style="align-items:center; gap:8px;">
+        <div class="col" style="gap:6px; align-items:center;">
+          <div class="chip c-sky">Audio 输入</div>
+          <div class="chip c-sky">Video 输入</div>
+        </div>
+        <div class="ah">→</div>
+        <div class="chip c-blue" style="padding:10px 18px; font-size:13px; font-weight:700;">端到端大模型<br><span style="font-size:10px; font-weight:400;">(Qwen-omni / 端侧 VLA)</span></div>
+        <div class="col" style="gap:6px; align-items:center;">
+          <div class="ah">→<div class="chip c-sky">Audio</div></div>
+          <div class="ah">→<div class="chip c-sky">Text</div></div>
+        </div>
+      </div>
 
-            <div class="panel panel-o" style="padding:10px;">
-              <div class="panel-title orange">DM 对话管理</div>
-              <div class="row" style="gap:6px;">
-                <div class="chip chip-o" style="flex:1;">仲裁</div>
-                <div class="chip chip-o" style="flex:1;">Scheduler</div>
-              </div>
-              <div style="display:flex; gap:6px; margin-top:6px;">
-                <div style="flex:1; text-align:center; font-size:10px; color:#999;">← asr_ret</div>
-                <div style="flex:1; text-align:center; font-size:10px; color:#999;">← asr_ret</div>
+      <hr style="border:none; border-top:1.5px dashed #e0e0e0; margin:4px 0;">
+
+      <!-- Row 1: Client → ASR/VLM → 多路并行 + 产品资源 -->
+      <div class="row" style="align-items:flex-start; gap:10px;">
+
+        <!-- Input chain -->
+        <div class="col" style="align-items:center; gap:6px; flex-shrink:0;">
+          <div class="chip c-dark" style="padding:8px 14px;">mic &amp; camera</div>
+          <div class="av">↓</div>
+          <div class="chip c-blue" style="padding:8px 16px;">ASR / VLM 感知</div>
+          <div class="av">↓</div>
+          <!-- 多路并行 -->
+          <div class="panel p-gray" style="min-width:160px;">
+            <div class="ptitle gray">多路并行</div>
+            <div class="col" style="gap:5px;">
+              <div class="chip c-org" style="font-size:11px;">意图识别</div>
+              <div class="chip c-org" style="font-size:11px;">语义模型 (BCD)</div>
+              <div class="chip c-org" style="font-size:11px;">中枢域分类</div>
+            </div>
+          </div>
+          <div class="av">↓</div>
+          <div class="albl" style="font-size:10px; color:#aaa;">按需加载</div>
+        </div>
+
+        <!-- Master Agent -->
+        <div class="master-agent" style="flex:1;">
+          <div class="master-label">Master Agent</div>
+
+          <div class="row" style="gap:10px; align-items:flex-start;">
+
+            <!-- 功能模块 -->
+            <div class="panel p-blue" style="flex:0 0 130px;">
+              <div class="ptitle blue">功能模块</div>
+              <div class="col" style="gap:5px;">
+                <div class="chip c-blue" style="font-size:11px;">任务规划</div>
+                <div class="chip c-blue" style="font-size:11px;">提示词工程</div>
+                <div class="chip c-blue" style="font-size:11px;">执行后感知</div>
+                <div class="chip c-blue" style="font-size:11px;">降级操作</div>
+                <div class="chip c-blue" style="font-size:11px;">后仲裁</div>
               </div>
             </div>
 
-            <div style="font-size:10px; color:#777; text-align:center;">NLP ret ↓</div>
-            <div class="chip chip-b" style="padding:10px;">本地 NLP / LLM</div>
-          </div>
+            <div class="av" style="align-self:center; font-size:13px;">→<br><span style="font-size:10px; color:#aaa;">智能调度</span></div>
 
-          <!-- Middle: NLP落域 + TTS/ASR vendor -->
-          <div class="col" style="flex:1; align-items:stretch;">
-            <div class="chip chip-o" style="padding:10px;">NLP / 落域</div>
-            <div class="arrow-v">↕</div>
-            <div class="panel panel-p">
-              <div class="panel-title purple">供应商 SDK</div>
-              <div class="col" style="gap:6px;">
-                <div class="chip chip-p">TTS</div>
-                <div class="chip chip-p">ASR</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Whisper + 多模态 + audio/video -->
-          <div class="col" style="flex:1.6;">
-            <div class="row" style="gap:8px; align-items:flex-start;">
-              <div class="col" style="flex:1;">
-                <div class="chip chip-b" style="font-size:11px; line-height:1.4;">Whisper.cpp<br>(VAD + ASR)</div>
-                <div class="arrow-label">pcm (降噪后) ↓</div>
-              </div>
-              <div class="panel panel-p" style="flex:1.2;">
-                <div class="panel-title purple">多模态</div>
-                <div class="col" style="gap:4px;">
-                  <div class="chip chip-p" style="font-size:11px;">face_id</div>
-                  <div class="chip chip-p" style="font-size:11px;">唇动</div>
-                  <div class="chip chip-p" style="font-size:11px;">注视</div>
-                  <div class="chip chip-p" style="font-size:11px;">声纹</div>
-                  <div class="chip chip-p" style="font-size:11px;">唤醒引擎</div>
+            <!-- 任务拆解 -->
+            <div class="task-box">
+              <div class="ptitle grn">MCP / Function Call / Agent Skill / Domain Skill</div>
+              <div class="row" style="gap:8px; align-items:flex-start;">
+                <div class="col" style="flex:1; gap:5px;">
+                  <div style="font-size:10px; font-weight:700; color:#555; text-align:center;">独立上下文</div>
+                  <div class="chip c-gray" style="font-size:11px;">上下文压缩/推理</div>
+                  <div class="chip c-gray" style="font-size:11px;">联网搜索</div>
+                  <div class="chip c-gray" style="font-size:11px;">RAG 干预</div>
+                  <div class="chip c-gray" style="font-size:11px;">降级策略</div>
+                </div>
+                <div class="col" style="flex:1; gap:5px;">
+                  <div style="font-size:10px; font-weight:700; color:#555; text-align:center;">并行执行</div>
+                  <div class="chip c-gray" style="font-size:11px;">整合回复生成</div>
+                  <div class="chip c-gray" style="font-size:11px;">Sub-Agent 调用</div>
+                  <div class="chip c-gray" style="font-size:11px;">Agent Skill 调用</div>
                 </div>
               </div>
             </div>
 
-            <div class="row" style="gap:8px; margin-top:4px; align-items:center;">
-              <div class="chip chip-o" style="flex:1;">audio</div>
-              <div style="font-size:10px; color:#999;">← pcm</div>
-              <div class="chip chip-o" style="flex:1;">video</div>
-              <div style="font-size:10px; color:#999;">← YUV</div>
-            </div>
           </div>
 
-          <!-- Far right: VLM/WebRTC + TTS SDK -->
-          <div class="col" style="flex:0.8; align-items:stretch;">
-            <div class="chip chip-p" style="padding:10px; font-size:12px;">VLM / WebRTC</div>
-            <div class="chip chip-o" style="padding:10px;">TTS SDK</div>
-            <div class="chip chip-o" style="font-size:11px; line-height:1.5;">Linux Core</div>
+          <!-- 主动记忆 -->
+          <div class="row" style="margin-top:10px; gap:8px; align-items:center;">
+            <div class="albl" style="font-size:11px; color:#00897b;">主动记忆 ↓ &nbsp; 记忆消费 ↓</div>
           </div>
-
         </div>
-      </div><!-- /local-wrap -->
 
-      <!-- Cloud zone -->
-      <div class="cloud-wrap">
-        <div class="row" style="gap:12px; align-items:flex-start;">
+        <!-- Sub Agent + 产品资源 (right column) -->
+        <div class="col" style="flex:0 0 220px; gap:10px;">
 
-          <!-- MOGA cloud -->
-          <div class="panel panel-o" style="flex:1.5;">
-            <div class="panel-title orange">MOGA 云</div>
-            <div class="row" style="gap:6px; margin-bottom:8px;">
-              <div class="chip chip-o" style="flex:1;">NLP / LLM</div>
-              <div class="chip chip-o" style="flex:1;">log</div>
-              <div class="chip chip-o" style="flex:1;">…</div>
-            </div>
-            <div class="arrow-v">↓</div>
-            <div class="row" style="gap:6px; margin-top:4px;">
-              <div class="chip chip-p" style="flex:1; font-size:11px;">豆包 AI Agent</div>
-              <div class="chip chip-p" style="flex:1; font-size:11px;">讯飞 AI Agent</div>
-              <div class="chip chip-p" style="flex:1;">…</div>
+          <!-- 产品资源 -->
+          <div class="panel p-pur">
+            <div class="ptitle pur">产品资源</div>
+            <div class="col" style="gap:6px;">
+              <div class="chip c-pur" style="font-size:11px;">人设配置 / 中框配置</div>
+              <div class="chip c-pur" style="font-size:11px;">对话策略配置</div>
+              <div class="row" style="gap:6px; margin-top:4px;">
+                <div class="chip c-gray" style="flex:1; font-size:10px;">产品配置单</div>
+                <div class="chip c-gray" style="flex:1; font-size:10px;">技能配置单</div>
+              </div>
+              <div class="chip c-pur" style="font-size:11px;">任务型 / 流程型技能</div>
+              <div class="chip c-pur" style="font-size:11px;">Sub Agent / Agent Skill</div>
             </div>
           </div>
 
-          <!-- Vendor TTS/ASR -->
-          <div class="panel panel-p" style="flex:1;">
-            <div class="panel-title purple">供应商云 — 语音</div>
-            <div class="col" style="gap:6px;">
-              <div class="chip chip-p">超拟人 TTS</div>
-              <div class="chip chip-p">ASR</div>
-              <div class="chip chip-p">…</div>
-            </div>
-          </div>
-
-          <!-- Vendor multimodal -->
-          <div class="panel panel-p" style="flex:1;">
-            <div class="panel-title purple">供应商云 — 视觉</div>
-            <div class="col" style="gap:6px;">
-              <div class="chip chip-p">多模态模型</div>
+          <!-- Sub Agent -->
+          <div class="sub-agent">
+            <div class="sub-label">Sub Agent</div>
+            <div class="col" style="gap:6px; margin-top:4px;">
+              <div style="font-size:10px; font-weight:700; color:#7b1fa2;">本地智能体</div>
+              <div class="chip c-pur" style="font-size:11px;">车控 Agent</div>
+              <div class="chip c-pur" style="font-size:11px;">导航 Agent</div>
+              <div class="chip c-pur" style="font-size:11px;">多媒体 Agent</div>
+              <div class="chip c-pur" style="font-size:11px;">VLM 视觉 Agent</div>
+              <div style="font-size:10px; font-weight:700; color:#7b1fa2; margin-top:4px;">第三方智能体</div>
+              <div class="chip c-gray" style="font-size:11px;">豆包 / 讯飞 Agent</div>
+              <div class="chip c-gray" style="font-size:11px;">xxx Agent</div>
             </div>
           </div>
 
         </div>
-      </div><!-- /cloud-wrap -->
+
+      </div>
+
+      <!-- Row 2: 记忆/信号 + Agent Skill + MCP tool Pool -->
+      <div class="row" style="gap:10px; align-items:flex-start;">
+
+        <!-- 环境信号 + 记忆 -->
+        <div class="col" style="gap:8px; flex:1.2;">
+          <div class="row" style="gap:8px; align-items:center;">
+            <div class="chip c-teal" style="font-size:11px;">座舱 / 环境信号</div>
+            <div class="ah">→<span style="font-size:10px;">感知决策</span></div>
+          </div>
+          <div class="panel p-teal">
+            <div class="ptitle teal">记忆 · 信号</div>
+            <div class="row" style="gap:6px; margin-bottom:6px;">
+              <div class="chip c-teal" style="flex:1; font-size:11px;">主动记忆</div>
+              <div class="chip c-teal" style="flex:1; font-size:11px;">用户画像提炼</div>
+            </div>
+            <div class="wrap">
+              <div class="chip c-gray" style="font-size:11px;">长时记忆</div>
+              <div class="chip c-gray" style="font-size:11px;">用户画像</div>
+              <div class="chip c-gray" style="font-size:11px;">感知融合</div>
+              <div class="chip c-gray" style="font-size:11px;">交互记录</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Skill -->
+        <div class="panel p-sky" style="flex:1;">
+          <div class="ptitle sky">Agent Skill</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-sky" style="font-size:11px;">路线规划</div>
+            <div class="chip c-sky" style="font-size:11px;">日程</div>
+            <div class="chip c-sky" style="font-size:11px;">提醒</div>
+            <div class="chip c-sky" style="font-size:11px;">可插拔式产品 Skill</div>
+          </div>
+        </div>
+
+        <!-- MCP tool Pool -->
+        <div class="panel p-grn" style="flex:1.4;">
+          <div class="ptitle grn">MCP tool Pool</div>
+          <div class="row" style="gap:8px;">
+            <div class="col" style="flex:1; gap:5px;">
+              <div style="font-size:10px; font-weight:700; color:#2e7d32;">云端 MCP</div>
+              <div class="chip c-grn" style="font-size:11px;">高德</div>
+              <div class="chip c-grn" style="font-size:11px;">Websearch</div>
+              <div class="chip c-grn" style="font-size:11px;">自定义 MCP</div>
+            </div>
+            <div class="col" style="flex:1; gap:5px;">
+              <div style="font-size:10px; font-weight:700; color:#2e7d32;">端侧 MCP</div>
+              <div class="chip c-grn" style="font-size:11px;">车控执行</div>
+              <div class="chip c-grn" style="font-size:11px;">端侧实时数据</div>
+              <div class="chip c-grn" style="font-size:11px;">ROS2 接口</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div><!-- /d1-main -->
 
-    <!-- Right sidebar: 情感TTS引擎 -->
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-      <div class="chip chip-b" style="writing-mode:vertical-rl; letter-spacing:4px; padding:20px 8px; font-size:13px; font-weight:700; height:200px; line-height:1.6;">
-        情感 TTS 引擎
-      </div>
+    <!-- Far right: 情感TTS引擎 -->
+    <div class="d1-right">
+      <div class="tts-engine">情感 TTS 引擎</div>
     </div>
 
-  </div><!-- /d1-body -->
+  </div><!-- /d1-wrap -->
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     DIAGRAM 2 — 语音大模型架构
-══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+  DIAGRAM 2 — 语音 + VLM 大模型架构
+══════════════════════════════════════════ -->
 <div class="page">
   <div class="page-header">
-    <div class="page-num">Diagram 02</div>
-    <div class="page-title">语音大模型架构</div>
-    <div class="page-sub">语音输入到输出的完整处理链路，含在线/离线双路径及端到端模型</div>
+    <div>
+      <div class="page-num">Diagram 02</div>
+      <div class="page-title">语音 + VLM 大模型架构</div>
+    </div>
+    <div class="page-sub">端侧推理 · 在线/离线双路径 · 端到端通路 · VLM 视觉感知</div>
   </div>
 
-  <!-- Layer 0: Input -->
-  <div class="row" style="justify-content:center; margin-bottom:10px; gap:16px;">
-    <div class="chip chip-b" style="padding:10px 24px;">Mic / Audio 输入</div>
-    <div class="chip chip-b" style="padding:10px 24px;">Camera / Video 输入</div>
+  <!-- ── Input Layer ── -->
+  <div class="row" style="justify-content:center; gap:20px; margin-bottom:8px;">
+    <div class="chip c-blue" style="padding:10px 28px; font-size:13px;">Mic 阵列输入</div>
+    <div class="chip c-blue" style="padding:10px 28px; font-size:13px;">Camera / Video 输入</div>
   </div>
-  <div class="arrow-v">↓</div>
+  <div class="av">↓</div>
 
-  <!-- Layer 1: Preprocessing -->
-  <div class="panel panel-k" style="margin-bottom:10px;">
-    <div class="panel-title" style="color:#555;">Layer 1 — 前端预处理</div>
-    <div class="row" style="gap:10px; justify-content:center;">
-      <div class="chip chip-k">降噪 / AEC</div>
-      <div class="chip chip-k">VAD 语音活动检测</div>
-      <div class="chip chip-k">唤醒词检测</div>
-      <div class="chip chip-k">去畸变 (YUV→RGB)</div>
+  <!-- ── Layer 1: 前端预处理 ── -->
+  <div class="panel p-gray" style="margin-bottom:8px;">
+    <div class="ptitle gray" style="font-size:12px;">LAYER 1 · 前端预处理</div>
+    <div class="row" style="justify-content:center; flex-wrap:wrap; gap:8px;">
+      <div class="chip c-gray">降噪 / AEC 回声消除</div>
+      <div class="chip c-gray">VAD 语音活动检测</div>
+      <div class="chip c-gray">唤醒词检测</div>
+      <div class="chip c-gray">去畸变 (YUV → RGB)</div>
+      <div class="chip c-gray">声纹识别预处理</div>
     </div>
   </div>
-  <div class="arrow-v">↓</div>
+  <div class="av">↓</div>
 
-  <!-- Layer 2: Perception — ASR + Vision -->
-  <div class="row" style="gap:12px; margin-bottom:8px;">
+  <!-- ── Layer 2: 感知 (并行两路) ── -->
+  <div class="row" style="gap:12px; margin-bottom:8px; align-items:stretch;">
 
-    <div class="panel panel-b" style="flex:2;">
-      <div class="panel-title blue">Layer 2a — 语音感知 (ASR)</div>
-      <div class="row" style="gap:8px;">
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">在线路径</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-b">云端 ASR</div>
-            <div class="arrow-label">↓ 流式识别</div>
-            <div class="chip chip-p">供应商 ASR</div>
+    <!-- 2a 语音感知 -->
+    <div class="panel p-blue" style="flex:2;">
+      <div class="ptitle blue" style="font-size:12px;">LAYER 2a · 语音感知 (ASR)</div>
+      <div class="row" style="gap:10px; align-items:stretch;">
+
+        <!-- 在线 -->
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">在线路径</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-blue" style="font-size:11px;">云端 ASR（流式）</div>
+            <div class="chip c-pur" style="font-size:11px;">供应商 ASR</div>
+            <div class="albl">↓ 实时 token 流</div>
           </div>
         </div>
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">离线路径</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-o">Whisper.cpp</div>
-            <div class="arrow-label">↓ VAD + 本地推理</div>
-            <div class="chip chip-o">本地 ASR 模型</div>
+
+        <!-- 离线 -->
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">离线路径</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-org" style="font-size:11px;">Whisper.cpp (VAD+ASR)</div>
+            <div class="chip c-org" style="font-size:11px;">本地 ASR 模型</div>
+            <div class="albl">↓ 本地推理</div>
           </div>
         </div>
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">端到端路径</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-t">端到端语音模型</div>
-            <div class="arrow-label">↓ Audio → Text/Action</div>
-            <div class="chip chip-t">Qwen-omni 等</div>
+
+        <!-- 端到端 -->
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">端到端路径</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-teal" style="font-size:11px;">Qwen-omni / VLA</div>
+            <div class="chip c-teal" style="font-size:11px;">Audio → Token 直通</div>
+            <div class="albl">↓ 跳过 ASR</div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <div class="panel panel-p" style="flex:1;">
-      <div class="panel-title purple">Layer 2b — 视觉感知</div>
-      <div class="col" style="gap:6px;">
-        <div class="chip chip-p">face_id 识别</div>
-        <div class="chip chip-p">唇动检测</div>
-        <div class="chip chip-p">注视追踪</div>
-        <div class="chip chip-p">VLM / WebRTC</div>
+    <!-- 2b VLM 视觉感知 -->
+    <div class="panel p-pur" style="flex:1;">
+      <div class="ptitle pur" style="font-size:12px;">LAYER 2b · VLM 视觉感知</div>
+      <div class="col" style="gap:5px;">
+        <div class="chip c-pur" style="font-size:11px;">face_id 人脸识别</div>
+        <div class="chip c-pur" style="font-size:11px;">唇动 / 注视检测</div>
+        <div class="chip c-pur" style="font-size:11px;">多模态场景理解</div>
+        <div class="chip c-pur" style="font-size:11px;">WebRTC 视频流接入</div>
+        <div class="chip c-pur" style="font-size:11px;">云端 VLM 供应商</div>
       </div>
     </div>
 
   </div>
-  <div class="arrow-v">↓ text / token</div>
+  <div class="av">↓ &nbsp;text / vision token</div>
 
-  <!-- Layer 3: NLU + NLP -->
-  <div class="panel panel-o" style="margin-bottom:8px;">
-    <div class="panel-title orange">Layer 3 — 语义理解 (NLU / NLP)</div>
-    <div class="row" style="gap:10px; justify-content:center;">
-      <div class="chip chip-o">意图识别</div>
-      <div class="chip chip-o">实体抽取</div>
-      <div class="chip chip-o">NLP / 落域</div>
-      <div class="chip chip-o">语义分类 (BCD)</div>
-      <div class="chip chip-o">多路并行</div>
+  <!-- ── Layer 3: NLU ── -->
+  <div class="panel p-org" style="margin-bottom:8px;">
+    <div class="ptitle org" style="font-size:12px;">LAYER 3 · 语义理解 (NLU / NLP)</div>
+    <div class="row" style="flex-wrap:wrap; gap:8px; justify-content:center;">
+      <div class="chip c-org">意图识别</div>
+      <div class="chip c-org">实体抽取</div>
+      <div class="chip c-org">NLP / 落域</div>
+      <div class="chip c-org">语义分类 (BCD)</div>
+      <div class="chip c-org">多路并行调度</div>
+      <div class="chip c-org">视觉-语言融合理解</div>
     </div>
   </div>
-  <div class="arrow-v">↓</div>
+  <div class="av">↓</div>
 
-  <!-- Layer 4: LLM / DM -->
-  <div class="row" style="gap:12px; margin-bottom:8px;">
-    <div class="panel panel-b" style="flex:2;">
-      <div class="panel-title blue">Layer 4 — 大语言模型 (LLM / DM)</div>
-      <div class="row" style="gap:8px;">
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">在线 LLM</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-b">MOGA 云 LLM</div>
-            <div class="chip chip-p">豆包 / 讯飞 Agent</div>
+  <!-- ── Layer 4: LLM / DM ── -->
+  <div class="row" style="gap:12px; margin-bottom:8px; align-items:stretch;">
+
+    <div class="panel p-blue2" style="flex:2;">
+      <div class="ptitle blue" style="font-size:12px;">LAYER 4 · 大语言模型 (LLM) + 对话管理 (DM)</div>
+      <div class="row" style="gap:10px; align-items:stretch;">
+
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">在线 LLM</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-blue" style="font-size:11px;">MOGA 云 LLM</div>
+            <div class="chip c-pur" style="font-size:11px;">豆包 / 讯飞 Agent</div>
+            <div class="chip c-pur" style="font-size:11px;">第三方大模型</div>
           </div>
         </div>
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">离线 LLM</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-o">本地 NLP/LLM</div>
-            <div class="chip chip-o">端侧小模型</div>
+
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">离线 LLM</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-org" style="font-size:11px;">本地 NLP / LLM</div>
+            <div class="chip c-org" style="font-size:11px;">端侧小模型</div>
           </div>
         </div>
-        <div class="panel panel-k" style="flex:1;">
-          <div class="panel-title" style="color:#555;">DM 对话管理</div>
-          <div class="col" style="gap:6px;">
-            <div class="chip chip-o">仲裁</div>
-            <div class="chip chip-o">Scheduler</div>
-            <div class="chip chip-o">意图发分</div>
+
+        <div class="panel p-gray" style="flex:1;">
+          <div class="ptitle gray">DM 对话管理</div>
+          <div class="col" style="gap:5px;">
+            <div class="chip c-org" style="font-size:11px;">仲裁 / Scheduler</div>
+            <div class="chip c-org" style="font-size:11px;">意图发分</div>
+            <div class="chip c-org" style="font-size:11px;">降级策略</div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <div class="panel panel-t" style="flex:1;">
-      <div class="panel-title teal">记忆 / 上下文</div>
-      <div class="col" style="gap:6px;">
-        <div class="chip chip-t">长时记忆</div>
-        <div class="chip chip-t">用户画像</div>
-        <div class="chip chip-t">感知融合</div>
-        <div class="chip chip-t">交互记录</div>
+    <!-- 记忆 -->
+    <div class="panel p-teal" style="flex:1;">
+      <div class="ptitle teal" style="font-size:12px;">记忆 · 上下文</div>
+      <div class="col" style="gap:5px;">
+        <div class="chip c-teal" style="font-size:11px;">长时记忆</div>
+        <div class="chip c-teal" style="font-size:11px;">用户画像</div>
+        <div class="chip c-teal" style="font-size:11px;">感知融合</div>
+        <div class="chip c-teal" style="font-size:11px;">交互记录</div>
+        <div class="chip c-teal" style="font-size:11px;">主动记忆注入</div>
       </div>
     </div>
-  </div>
-  <div class="arrow-v">↓ text response</div>
 
-  <!-- Layer 5: TTS -->
-  <div class="panel panel-o" style="margin-bottom:8px;">
-    <div class="panel-title orange">Layer 5 — 语音合成 (TTS)</div>
-    <div class="row" style="gap:10px; justify-content:center;">
-      <div class="chip chip-o">在线 TTS（超拟人）</div>
-      <div class="chip chip-o">离线 TTS</div>
-      <div class="chip chip-b">情感 TTS 引擎</div>
-      <div class="chip chip-p">供应商 TTS SDK</div>
+  </div>
+  <div class="av">↓ &nbsp;text response</div>
+
+  <!-- ── Layer 5: TTS ── -->
+  <div class="panel p-org" style="margin-bottom:8px;">
+    <div class="ptitle org" style="font-size:12px;">LAYER 5 · 语音合成 (TTS)</div>
+    <div class="row" style="flex-wrap:wrap; gap:8px; justify-content:center;">
+      <div class="chip c-org">在线 TTS（超拟人）</div>
+      <div class="chip c-org">离线 TTS</div>
+      <div class="chip c-blue">情感 TTS 引擎</div>
+      <div class="chip c-pur">供应商 TTS SDK</div>
+      <div class="chip c-teal">TTS SDK 封装层</div>
     </div>
   </div>
-  <div class="arrow-v">↓</div>
+  <div class="av">↓</div>
 
-  <!-- Layer 6: Output -->
-  <div class="row" style="justify-content:center; gap:16px;">
-    <div class="chip chip-b" style="padding:10px 24px;">Audio 输出</div>
-    <div class="chip chip-b" style="padding:10px 24px;">表情 / 动作指令</div>
-    <div class="chip chip-b" style="padding:10px 24px;">ROS2 → Node</div>
+  <!-- ── Output Layer ── -->
+  <div class="row" style="justify-content:center; gap:16px; flex-wrap:wrap;">
+    <div class="chip c-blue" style="padding:10px 20px;">🔊 Audio 输出</div>
+    <div class="chip c-blue" style="padding:10px 20px;">😊 表情 / 情绪指令</div>
+    <div class="chip c-blue" style="padding:10px 20px;">🤖 动作 / ROS2 Node</div>
+    <div class="chip c-pur" style="padding:10px 20px;">👁 VLM 视觉反馈</div>
   </div>
 
 </div>
 
 
-<!-- ══════════════════════════════════════════════════════
-     DIAGRAM 3 — 工程化模块结构
-══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════
+  DIAGRAM 3 — 工程化模块结构
+══════════════════════════════════════════ -->
 <div class="page">
   <div class="page-header">
-    <div class="page-num">Diagram 03</div>
-    <div class="page-title">工程化模块结构</div>
+    <div>
+      <div class="page-num">Diagram 03</div>
+      <div class="page-title">工程化模块结构</div>
+    </div>
     <div class="page-sub">各功能模块在工程目录中的具体落地位置</div>
   </div>
 
   <!-- APP -->
-  <div class="eng-app">APP &nbsp;|&nbsp; 云端控制</div>
-  <div class="arrow-v">↕</div>
+  <div class="panel p-gray" style="text-align:center; font-size:14px; font-weight:700;">
+    APP &nbsp;|&nbsp; 云端控制
+  </div>
+  <div class="av">↕</div>
 
   <!-- LINUX -->
-  <div class="eng-linux">
-    <div class="eng-linux-label">LINUX</div>
+  <div class="d3-linux">
+    <div class="d3-lbl">LINUX</div>
 
     <!-- 中央控制系统 -->
-    <div class="eng-central">
-      <div class="chip chip-k" style="white-space:nowrap;">行为树</div>
-      <div style="flex:1; text-align:center; font-size:13px; font-weight:700;">中央控制系统</div>
+    <div class="row" style="align-items:center; gap:10px;">
+      <div class="chip c-gray">行为树</div>
+      <div style="flex:1; background:white; border:1.5px solid #546e7a; border-radius:6px; padding:10px; text-align:center; font-size:13px; font-weight:700;">中央控制系统</div>
     </div>
-    <div class="arrow-v">↕</div>
+    <div class="av">↕</div>
 
     <!-- 中控通信层 -->
-    <div class="eng-comm">中控通信层</div>
-    <div class="arrow-v">↕</div>
+    <div class="d3-comm">中控通信层</div>
+    <div class="av">↕</div>
 
     <!-- 语音交互进程 -->
-    <div class="eng-voice">
-      <div class="eng-linux-label">语音交互进程</div>
+    <div class="d3-voice">
+      <div class="d3-lbl">语音交互进程</div>
 
       <!-- 对外通信层 -->
-      <div class="eng-ext">
-        <span style="font-size:11px; font-weight:700; color:#2e7d32; margin-right:4px;">对外通信层</span>
-        <div class="chip chip-g">command</div>
-        <div class="chip chip-g">表情</div>
-        <div class="chip chip-g">情感</div>
+      <div class="d3-ext">
+        <span style="font-size:11px; font-weight:700; color:#2e7d32;">对外通信层</span>
+        <div class="chip c-grn">command</div>
+        <div class="chip c-grn">表情</div>
+        <div class="chip c-grn">情感</div>
+        <div class="chip c-grn">VLM 视觉指令</div>
         <div style="flex:1;"></div>
-        <div class="chip chip-g">配置</div>
+        <div class="chip c-grn">配置</div>
       </div>
 
-      <!-- Arrow alignment matching node flex weights 1 : 2 : 0.4 -->
-      <div style="display:flex; gap:10px; font-size:14px; color:#aaa; margin-bottom:6px; text-align:center;">
+      <!-- Arrow row aligned with node flex weights 1 : 2 : 0.4 -->
+      <div style="display:flex; gap:10px; color:#bbb; font-size:16px; text-align:center; margin-bottom:6px;">
         <div style="flex:1;"></div>
         <div style="flex:2; display:flex; justify-content:center;">↕</div>
         <div style="flex:0.4; text-align:center;">↕</div>
       </div>
 
-      <!-- Nodes -->
-      <div class="eng-nodes">
+      <!-- node row -->
+      <div style="display:flex; gap:10px; align-items:stretch;">
 
         <!-- node_acoustic -->
-        <div class="eng-node" style="flex:1;">
-          <div class="eng-node-title">node_acoustic</div>
-          <div class="chip-grid" style="margin-bottom:8px;">
-            <div class="chip chip-g" style="font-size:11px;">多模态拾音</div>
-            <div class="chip chip-g" style="font-size:11px;">mic4</div>
-            <div class="chip chip-g" style="font-size:11px;">mic4*2</div>
-            <div class="chip chip-g" style="font-size:11px;">纯声学拾音</div>
-            <div class="chip chip-g" style="font-size:11px;">mic6</div>
-            <div class="chip chip-g" style="font-size:11px;">音频录制</div>
+        <div class="d3-node" style="flex:1;">
+          <div class="d3-ntit">node_acoustic</div>
+          <div class="wrap" style="margin-bottom:8px;">
+            <div class="chip c-grn" style="font-size:11px;">多模态拾音</div>
+            <div class="chip c-grn" style="font-size:11px;">mic4</div>
+            <div class="chip c-grn" style="font-size:11px;">mic4×2</div>
+            <div class="chip c-grn" style="font-size:11px;">纯声学拾音</div>
+            <div class="chip c-grn" style="font-size:11px;">mic6</div>
+            <div class="chip c-grn" style="font-size:11px;">音频录制</div>
           </div>
-          <div class="chip chip-k" style="width:100%; font-size:11px; margin-bottom:4px;">音频流透传</div>
-          <div class="chip chip-k" style="width:100%; font-size:11px;">视频流透传</div>
-          <div style="font-size:10px; color:#999; text-align:right; margin-top:6px;">audio / video stream →</div>
+          <div class="chip c-gray" style="width:100%; margin-bottom:4px; font-size:11px;">音频流透传</div>
+          <div class="chip c-gray" style="width:100%; font-size:11px;">视频流透传</div>
+          <div style="font-size:10px; color:#aaa; text-align:right; margin-top:6px;">audio / video stream →</div>
         </div>
 
         <!-- node_scheduler -->
-        <div class="eng-node" style="flex:2;">
-          <div class="eng-node-title">node_scheduler</div>
-          <div class="sched-layout">
-            <div class="sched-asr-llm">
-              <div style="font-size:10px; color:#777; text-align:center; margin-bottom:2px;">在线</div>
-              <div class="chip chip-b" style="font-size:11px;">online ASR</div>
-              <div class="chip chip-b" style="font-size:11px;">online LLM</div>
-              <div class="chip chip-b" style="font-size:11px;">online TTS</div>
-              <div class="chip chip-t" style="font-size:11px;">online 端到端</div>
+        <div class="d3-node" style="flex:2;">
+          <div class="d3-ntit">node_scheduler</div>
+          <div style="display:flex; gap:8px;">
+
+            <div class="col" style="flex:1; gap:4px;">
+              <div style="font-size:10px; font-weight:700; color:#aaa; text-align:center;">在线</div>
+              <div class="chip c-blue" style="font-size:11px;">online ASR</div>
+              <div class="chip c-blue" style="font-size:11px;">online LLM</div>
+              <div class="chip c-blue" style="font-size:11px;">online TTS</div>
+              <div class="chip c-teal" style="font-size:11px;">online 端到端</div>
+              <div class="chip c-pur" style="font-size:11px;">online VLM</div>
             </div>
-            <div class="sched-asr-llm">
-              <div style="font-size:10px; color:#777; text-align:center; margin-bottom:2px;">离线</div>
-              <div class="chip chip-k" style="font-size:11px;">offline ASR</div>
-              <div class="chip chip-k" style="font-size:11px;">offline LLM</div>
-              <div class="chip chip-k" style="font-size:11px;">offline TTS</div>
-              <div class="chip chip-o" style="font-size:11px;">语音交互核心管理</div>
+
+            <div class="col" style="flex:1; gap:4px;">
+              <div style="font-size:10px; font-weight:700; color:#aaa; text-align:center;">离线</div>
+              <div class="chip c-gray" style="font-size:11px;">offline ASR</div>
+              <div class="chip c-gray" style="font-size:11px;">offline LLM</div>
+              <div class="chip c-gray" style="font-size:11px;">offline TTS</div>
+              <div class="chip c-org" style="font-size:11px;">语音交互核心管理</div>
             </div>
-            <div class="sched-core">
+
+            <div class="d3-core" style="flex:1;">
               <div style="font-size:11px; font-weight:700; color:#555; text-align:center; margin-bottom:6px;">中枢层</div>
-              <div class="chip-grid">
-                <div class="chip chip-k" style="font-size:11px;">NLU</div>
-                <div class="chip chip-k" style="font-size:11px;">DM</div>
-                <div class="chip chip-k" style="font-size:11px;">仲裁</div>
-                <div class="chip chip-k" style="font-size:11px;">任务指令</div>
-                <div class="chip chip-k" style="font-size:11px;">表情</div>
+              <div class="wrap">
+                <div class="chip c-gray" style="font-size:11px;">NLU</div>
+                <div class="chip c-gray" style="font-size:11px;">DM</div>
+                <div class="chip c-gray" style="font-size:11px;">仲裁</div>
+                <div class="chip c-gray" style="font-size:11px;">任务指令</div>
+                <div class="chip c-gray" style="font-size:11px;">表情</div>
               </div>
             </div>
+
           </div>
         </div>
 
         <!-- node_rtc -->
-        <div class="eng-node rtc">
-          <div class="eng-node-title">node_rtc</div>
-          <div style="font-size:10px; color:#999; margin-top:8px; line-height:2;">
-            ← audio stream<br>← video stream
+        <div class="d3-node" style="flex:0.4;">
+          <div class="d3-ntit">node_rtc</div>
+          <div style="font-size:10px; color:#aaa; line-height:2.2; margin-top:8px;">
+            ← audio<br>← video<br>← VLM
           </div>
         </div>
 
-      </div><!-- /eng-nodes -->
+      </div><!-- /node row -->
 
-      <!-- mic input label -->
-      <div style="display:flex; align-items:center; gap:8px; margin-top:8px; font-size:11px; color:#777;">
-        <div class="chip chip-k" style="white-space:nowrap; font-size:11px;">mic &amp; camera</div>
-        <span>→</span>
-        <span>audio / video stream 输入</span>
+      <!-- mic / camera label -->
+      <div class="row" style="margin-top:8px; align-items:center; gap:8px;">
+        <div class="chip c-gray" style="font-size:11px; white-space:nowrap;">mic &amp; camera</div>
+        <span style="color:#aaa;">→</span>
+        <span style="font-size:11px; color:#aaa;">audio / video stream 输入</span>
       </div>
 
       <!-- base -->
-      <div class="eng-base">
-        <div class="eng-base-title">base</div>
-        <div class="chip-grid">
-          <div class="chip chip-g">Network</div>
-          <div class="chip chip-g">config</div>
-          <div class="chip chip-g">Log</div>
+      <div class="d3-base">
+        <div class="d3-ntit" style="text-align:left;">base</div>
+        <div class="wrap">
+          <div class="chip c-grn">Network</div>
+          <div class="chip c-grn">config</div>
+          <div class="chip c-grn">Log</div>
         </div>
       </div>
 
-    </div><!-- /eng-voice -->
-  </div><!-- /eng-linux -->
+    </div><!-- /d3-voice -->
+  </div><!-- /d3-linux -->
 
 </div>
 
