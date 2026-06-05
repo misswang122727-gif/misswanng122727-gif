@@ -160,9 +160,202 @@ body {
 .d3-ntit  { font-size:11px; font-weight:700; color:#2e7d32; text-align:center; margin-bottom:8px; }
 .d3-core  { background:white; border:1.5px solid #bdbdbd; border-radius:6px; padding:8px; }
 .d3-base  { background:#e8f5e9; border:1.5px solid #43a047; border-radius:8px; padding:10px; margin-top:10px; }
+
+/* ═══════════════════ FEISHU-STYLE PLATFORM ═══════════════════ */
+.fs-page {
+  background:#fff; padding:48px 52px; margin:0 auto 56px;
+  border-radius:16px; box-shadow:0 6px 30px rgba(0,0,0,0.08);
+  max-width:1440px; overflow-x:auto;
+}
+.fs-frame {
+  background:#f7f9fc; border:1px solid #e6ebf2; border-radius:16px;
+  padding:22px; display:flex; flex-direction:column; gap:14px;
+}
+/* one horizontal layer band */
+.fs-band {
+  display:flex; align-items:stretch; gap:16px;
+  background:#fff; border:1px solid #e8edf3; border-radius:12px;
+  padding:16px 18px; position:relative;
+}
+.fs-band-label {
+  flex:0 0 92px; display:flex; flex-direction:column;
+  justify-content:center; align-items:flex-start; gap:4px;
+  border-left:4px solid var(--accent,#4285f4); padding-left:14px;
+}
+.fs-band-label .zh { font-size:15px; font-weight:800; color:#1a2233; }
+.fs-band-label .en { font-size:10px; font-weight:600; letter-spacing:1px; color:#9aa6b8; text-transform:uppercase; }
+.fs-band-body { flex:1; }
+/* uniform tile grid */
+.fs-grid {
+  display:grid; gap:10px;
+  grid-template-columns:repeat(auto-fill, minmax(140px,1fr));
+}
+.fs-grid.cols6 { grid-template-columns:repeat(6,1fr); }
+.fs-grid.cols5 { grid-template-columns:repeat(5,1fr); }
+.fs-grid.cols4 { grid-template-columns:repeat(4,1fr); }
+.fs-grid.cols3 { grid-template-columns:repeat(3,1fr); }
+.fs-tile {
+  background:#fff; border:1px solid #e2e8f1; border-radius:8px;
+  min-height:46px; display:flex; align-items:center; justify-content:center;
+  text-align:center; font-size:12.5px; color:#2b3445; font-weight:500;
+  padding:6px 8px; transition:.15s; line-height:1.4;
+}
+.fs-tile:hover { box-shadow:0 2px 10px rgba(66,133,244,.12); transform:translateY(-1px); }
+.fs-tile .sub { display:block; font-size:10px; color:#9aa6b8; font-weight:400; margin-top:2px; }
+/* tile accent tints */
+.fs-tile.t-blue { background:#f3f7ff; border-color:#cfe0ff; color:#1a56db; }
+.fs-tile.t-org  { background:#fff7ef; border-color:#ffe0c2; color:#b45309; }
+.fs-tile.t-pur  { background:#faf3ff; border-color:#e9d2f7; color:#7b1fa2; }
+.fs-tile.t-grn  { background:#f1faf3; border-color:#cdebd6; color:#1b7a3d; }
+.fs-tile.t-teal { background:#eefaf8; border-color:#c5ece6; color:#0a766b; }
+.fs-tile.t-gray { background:#f6f8fb; border-color:#e2e8f1; color:#475569; }
+/* the platform-core band gets a stronger look */
+.fs-band.core { background:linear-gradient(180deg,#eef4ff,#f7faff); border-color:#bcd3ff; }
+.fs-band.core .fs-tile { background:#fff; border-color:#bcd3ff; color:#1a56db; font-weight:700; }
+/* main row = layers + right vertical sidebars */
+.fs-main { display:flex; gap:14px; align-items:stretch; }
+.fs-layers { flex:1; display:flex; flex-direction:column; gap:14px; }
+.fs-side { display:flex; gap:12px; }
+.fs-pillar {
+  width:56px; border-radius:12px; border:1px solid;
+  display:flex; align-items:center; justify-content:center;
+  writing-mode:vertical-rl; letter-spacing:5px; font-size:13px; font-weight:700;
+  padding:14px 0;
+}
+.fs-pillar.sec { background:#fff5f5; border-color:#ffd0d0; color:#c0392b; }
+.fs-pillar.ops { background:#f3f9ff; border-color:#cfe4ff; color:#1f6fd6; }
+.fs-pillar.dev { background:#f4fbf4; border-color:#cdebd6; color:#1b7a3d; }
+.fs-title-row { display:flex; align-items:flex-end; gap:14px; margin-bottom:26px; padding-bottom:16px; border-bottom:2px solid #eef1f6; }
 </style>
+<style>/* keep separate to avoid disturbing existing rules */</style>
+<style></style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════
+  飞书风格 · 平台级架构总图
+══════════════════════════════════════════ -->
+<div class="fs-page">
+  <div class="fs-title-row">
+    <div>
+      <div class="page-num">Platform Architecture</div>
+      <div class="page-title">语音智能平台 · 整体架构</div>
+    </div>
+    <div class="page-sub">飞书风格分层 · 接入 / 应用 / 能力 / 引擎 / 平台中枢 / 基础设施，安全·运维·研发纵向贯穿</div>
+  </div>
+
+  <div class="fs-frame">
+    <div class="fs-main">
+
+      <!-- 左侧分层主体 -->
+      <div class="fs-layers">
+
+        <!-- 接入层 -->
+        <div class="fs-band" style="--accent:#4285f4;">
+          <div class="fs-band-label"><span class="zh">接入层</span><span class="en">Access</span></div>
+          <div class="fs-band-body">
+            <div class="fs-grid cols6">
+              <div class="fs-tile t-blue">APP<span class="sub">移动 / 车机</span></div>
+              <div class="fs-tile t-blue">云端控制台</div>
+              <div class="fs-tile t-blue">ROS2 Node</div>
+              <div class="fs-tile t-blue">mic &amp; camera</div>
+              <div class="fs-tile t-blue">WebRTC 音视频</div>
+              <div class="fs-tile t-blue">座舱 / 环境信号</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 应用 / 场景层 -->
+        <div class="fs-band" style="--accent:#9c27b0;">
+          <div class="fs-band-label"><span class="zh">应用层</span><span class="en">Scenario</span></div>
+          <div class="fs-band-body">
+            <div class="fs-grid cols6">
+              <div class="fs-tile t-pur">语音助手</div>
+              <div class="fs-tile t-pur">车控交互</div>
+              <div class="fs-tile t-pur">导航助手</div>
+              <div class="fs-tile t-pur">多媒体娱乐</div>
+              <div class="fs-tile t-pur">陪伴 / 闲聊</div>
+              <div class="fs-tile t-pur">可视交互 (VLM)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 能力层 -->
+        <div class="fs-band" style="--accent:#fb8c00;">
+          <div class="fs-band-label"><span class="zh">能力层</span><span class="en">Capability</span></div>
+          <div class="fs-band-body" style="display:flex; flex-direction:column; gap:10px;">
+            <div class="fs-grid cols5">
+              <div class="fs-tile t-org">ASR<span class="sub">在线 / 离线</span></div>
+              <div class="fs-tile t-org">TTS<span class="sub">情感 / 超拟人</span></div>
+              <div class="fs-tile t-org">VAD / 唤醒</div>
+              <div class="fs-tile t-org">降噪 / AEC</div>
+              <div class="fs-tile t-org">声纹识别</div>
+              <div class="fs-tile t-pur">VLM 视觉理解</div>
+              <div class="fs-tile t-pur">face_id / 唇动 / 注视</div>
+              <div class="fs-tile t-blue">NLU / 意图</div>
+              <div class="fs-tile t-blue">RAG / 知识</div>
+              <div class="fs-tile t-teal">记忆 / 用户画像</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 引擎 / 模型层 -->
+        <div class="fs-band" style="--accent:#00897b;">
+          <div class="fs-band-label"><span class="zh">引擎层</span><span class="en">Engine</span></div>
+          <div class="fs-band-body">
+            <div class="fs-grid cols5">
+              <div class="fs-tile t-blue">在线 LLM<span class="sub">MOGA 云</span></div>
+              <div class="fs-tile t-org">离线 LLM<span class="sub">端侧小模型</span></div>
+              <div class="fs-tile t-teal">端到端模型<span class="sub">Qwen-omni / VLA</span></div>
+              <div class="fs-tile t-pur">VLM 推理引擎</div>
+              <div class="fs-tile t-org">Whisper.cpp</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 平台中枢层 -->
+        <div class="fs-band core" style="--accent:#1a73e8;">
+          <div class="fs-band-label"><span class="zh">平台中枢</span><span class="en">Core</span></div>
+          <div class="fs-band-body">
+            <div class="fs-grid cols6">
+              <div class="fs-tile">Master Agent<span class="sub">智能调度</span></div>
+              <div class="fs-tile">DM 对话管理</div>
+              <div class="fs-tile">Sub Agent 编排</div>
+              <div class="fs-tile">MCP / Function Call</div>
+              <div class="fs-tile">任务拆解 / 并行</div>
+              <div class="fs-tile">仲裁 / 降级路由</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 资源 / 基础设施层 -->
+        <div class="fs-band" style="--accent:#43a047;">
+          <div class="fs-band-label"><span class="zh">资源层</span><span class="en">Resource</span></div>
+          <div class="fs-band-body">
+            <div class="fs-grid cols6">
+              <div class="fs-tile t-pur">Agent 仓库<span class="sub">车控/导航/三方</span></div>
+              <div class="fs-tile t-grn">MCP 工具池<span class="sub">高德/Websearch</span></div>
+              <div class="fs-tile t-pur">产品配置中心</div>
+              <div class="fs-tile t-teal">记忆 / 数据存储</div>
+              <div class="fs-tile t-gray">模型仓库</div>
+              <div class="fs-tile t-gray">供应商接入<span class="sub">豆包/讯飞</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /fs-layers -->
+
+      <!-- 右侧纵向贯穿条 -->
+      <div class="fs-side">
+        <div class="fs-pillar dev">研发工程</div>
+        <div class="fs-pillar ops">运维监控</div>
+        <div class="fs-pillar sec">安全合规</div>
+      </div>
+
+    </div><!-- /fs-main -->
+  </div><!-- /fs-frame -->
+</div>
+
 
 <!-- ══════════════════════════════════════════
   DIAGRAM 0A — 平台化整体架构总览
